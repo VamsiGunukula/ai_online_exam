@@ -1,6 +1,7 @@
 import json
 import random
 import uuid
+import pytz
 from datetime import datetime, timezone, timedelta
 
 def get_running_exam():
@@ -401,8 +402,6 @@ def migrate_schema():
 
 
 def seed_questions():
-    if Question.query.first():
-        return
     samples = [
         (
             "What does CPU stand for?",
@@ -419,7 +418,7 @@ def seed_questions():
             "PATCH",
             "GET",
             "CONNECT",
-            "C",
+            "B",
             "Web & Networking",
         ),
         (
@@ -511,6 +510,195 @@ def seed_questions():
             "3306",
             "B",
             "Web & Networking",
+        ),
+        (
+            "What is the time complexity of accessing an element in an array by index?",
+            "O(n)",
+            "O(log n)",
+            "O(1)",
+            "O(n^2)",
+            "C",
+            "Data Structures & Algorithms",
+        ),
+        (
+            "Which of the following is a NoSQL database?",
+            "MySQL",
+            "PostgreSQL",
+            "MongoDB",
+            "SQLite",
+            "C",
+            "DBMS",
+        ),
+        (
+            "What does RAM stand for?",
+            "Random Access Memory",
+            "Read Access Memory",
+            "Remote Access Memory",
+            "Read-only Memory",
+            "A",
+            "Programming Basics",
+        ),
+        (
+            "Which sorting algorithm has the best average-case time complexity?",
+            "Bubble Sort",
+            "Quick Sort",
+            "Selection Sort",
+            "Insertion Sort",
+            "B",
+            "Data Structures & Algorithms",
+        ),
+        (
+            "What is the purpose of DNS?",
+            "Data encryption",
+            "Domain name resolution",
+            "Database management",
+            "Digital signatures",
+            "B",
+            "Web & Networking",
+        ),
+        (
+            "Which command is used to create a new Git repository?",
+            "git init",
+            "git clone",
+            "git add",
+            "git commit",
+            "A",
+            "Tools & APIs",
+        ),
+        (
+            "What is the binary representation of decimal 10?",
+            "1010",
+            "1100",
+            "1001",
+            "1110",
+            "A",
+            "Programming Basics",
+        ),
+        (
+            "Which data structure uses FIFO principle?",
+            "Stack",
+            "Queue",
+            "Tree",
+            "Graph",
+            "B",
+            "Data Structures & Algorithms",
+        ),
+        (
+            "What is a foreign key in a database?",
+            "A primary key from another table",
+            "A unique identifier",
+            "An encrypted field",
+            "A computed column",
+            "A",
+            "DBMS",
+        ),
+        (
+            "Which HTTP status code indicates 'Not Found'?",
+            "200",
+            "301",
+            "404",
+            "500",
+            "C",
+            "Web & Networking",
+        ),
+        (
+            "What does IDE stand for?",
+            "Integrated Development Environment",
+            "Interface Design Editor",
+            "Interactive Development Engine",
+            "Internet Data Exchange",
+            "A",
+            "Tools & APIs",
+        ),
+        (
+            "What is the purpose of a compiler?",
+            "Convert source code to machine code",
+            "Debug programs",
+            "Manage memory",
+            "Create user interfaces",
+            "A",
+            "Programming Basics",
+        ),
+        (
+            "Which algorithm is used for finding the shortest path in a graph?",
+            "Binary Search",
+            "Dijkstra's Algorithm",
+            "Merge Sort",
+            "Depth-First Search",
+            "B",
+            "Data Structures & Algorithms",
+        ),
+        (
+            "What is SQL injection?",
+            "A type of database optimization",
+            "A security vulnerability",
+            "A database backup method",
+            "A data compression technique",
+            "B",
+            "DBMS",
+        ),
+        (
+            "Which protocol is used for secure file transfer?",
+            "HTTP",
+            "FTP",
+            "SFTP",
+            "SMTP",
+            "C",
+            "Web & Networking",
+        ),
+        (
+            "What is the purpose of version control?",
+            "Track changes in code over time",
+            "Compile programs",
+            "Test software",
+            "Deploy applications",
+            "A",
+            "Tools & APIs",
+        ),
+        (
+            "What is the hexadecimal representation of decimal 255?",
+            "FF",
+            "EF",
+            "FE",
+            "FD",
+            "A",
+            "Programming Basics",
+        ),
+        (
+            "Which data structure is best for implementing a priority queue?",
+            "Array",
+            "Linked List",
+            "Heap",
+            "Stack",
+            "C",
+            "Data Structures & Algorithms",
+        ),
+        (
+            "What is a transaction in database terms?",
+            "A set of operations that must all succeed or fail together",
+            "A single database query",
+            "A backup operation",
+            "A data migration process",
+            "A",
+            "DBMS",
+        ),
+        (
+            "Which layer of the OSI model handles routing?",
+            "Physical Layer",
+            "Data Link Layer",
+            "Network Layer",
+            "Transport Layer",
+            "C",
+            "Web & Networking",
+        ),
+        (
+            "What is the main advantage of using REST APIs?",
+            "Stateless communication",
+            "Real-time updates",
+            "Binary data transfer",
+            "Automatic scaling",
+            "A",
+            "Tools & APIs",
         ),
     ]
     for row in samples:
@@ -1937,7 +2125,9 @@ def exam_history():
     
     # Add student count and status to each exam
     from datetime import datetime
-    now = datetime.now()
+    import pytz
+    ist = pytz.timezone('Asia/Kolkata')
+    now = datetime.now(ist)
     
     for exam in exams:
         # Count attempts for this exam time period
@@ -1948,18 +2138,19 @@ def exam_history():
         ).count()
         exam.total_students = student_count
         
-        # Calculate exam status based on real datetime comparison
-        if exam.start_time <= now <= exam.end_time:
-            exam.status = "RUNNING"
-        elif now > exam.end_time:
-            exam.status = "COMPLETED"
-        else:
+        # Convert exam times to IST if they are naive
+        start = ist.localize(exam.start_time) if exam.start_time.tzinfo is None else exam.start_time
+        end = ist.localize(exam.end_time) if exam.end_time.tzinfo is None else exam.end_time
+        
+        # Calculate exam status based on IST timezone
+        if now < start:
             exam.status = "NOT STARTED"
+        elif start <= now <= end:
+            exam.status = "RUNNING"
+        else:
+            exam.status = "COMPLETED"
     
-    from datetime import datetime
-    return render_template('exam_history.html', exams=exams, now=datetime.now())
-
-@app.route('/admin/exam/delete/<int:exam_id>', methods=['POST'])
+    return render_template('exam_history.html', exams=exams, now=datetime.now(ist))
 @admin_required
 def delete_exam(exam_id):
     try:
@@ -2722,6 +2913,17 @@ def add_warning():
     db.session.commit()
     return {"status": "ok", "warnings": attempt.warning_count}
 
+
+# Reset questions table and add fresh data
+with app.app_context():
+    # Delete all existing questions
+    db.session.query(Question).delete()
+    db.session.commit()
+    print("All existing questions deleted.")
+    
+    # Add fresh 30 questions
+    seed_questions()
+    print("Added 30 fresh questions.")
 
 if __name__ == "__main__":
     app.run(debug=True)
