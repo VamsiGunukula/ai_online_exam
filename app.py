@@ -912,9 +912,12 @@ def login():
             (User.roll_number == roll_number)
         ).first()
         
-        if user and user.is_blocked:
-            flash("Your account is blocked by admin", "error")
-            return redirect(url_for("login"))
+        if user:
+            if user.is_blocked is None:
+                user.is_blocked = False
+            if user.is_blocked is True:
+                flash("Your account is blocked by admin", "error")
+                return redirect(url_for("login"))
             
         if user and check_password_hash(user.password_hash, password):
             if getattr(user, "is_admin", False):
