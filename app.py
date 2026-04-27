@@ -379,14 +379,7 @@ def migrate_schema():
         if getattr(a, "flagged", None) is None:
             a.flagged = False
 
-    # Set all questions correct_answer to "C"
-    for q in Question.query.all():
-        if q.correct_answer != "C":
-            q.correct_answer = "C"
-            print(f"Updated question {q.id}: correct_answer set to 'C'")
-
     db.session.commit()
-    print("Database migration completed. All questions now have correct_answer = 'C'")
 
     for u in User.query.all():
         if u.is_admin is None:
