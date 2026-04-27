@@ -172,6 +172,16 @@ color: #64748b;
       font-weight: 600;
       color: #cbd5e1;
     ">Schedule Exam</div>
+<<<<<<< HEAD
+=======
+    {% if schedule and schedule.exam_token %}
+    <div style="margin-top: 10px; padding: 10px; background: rgba(59,130,246,0.1); border-radius: 8px; font-size: 14px;">
+      <strong style="color: #3b82f6;">Exam Access Link:</strong><br>
+      <code style="background: #1e293b; color: #22c55e; padding: 4px 8px; border-radius: 4px; font-family: monospace; word-break: break-all;">{{ url_for('exam_start_with_token', token=schedule.exam_token) }}</code>
+      <br><small style="color: #94a3b8;">Share this link with students for time-restricted access</small>
+    </div>
+    {% endif %}
+>>>>>>> c0b915eff67d0cf145739fbd2c968b9cc66371d3
   </div>
 
   <div class="admin-stat-card" style="
@@ -221,8 +231,91 @@ color: #64748b;
       color: #cbd5e1;
     ">Blocked Students</div>
   </div>
+<<<<<<< HEAD
 </div>
 
+=======
+
+  <div class="admin-stat-card" style="
+    padding: 25px;
+    border-radius: 12px;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    cursor: default;
+  ">
+    <div class="admin-stat-title" style="
+      font-size: 20px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 15px;
+    ">Exam Link</div>
+    
+    {% if latest_exam and latest_exam.exam_token %}
+      <div style="margin-bottom: 10px;">
+        <strong style="color: #e2e8f0;">Exam:</strong> 
+        <span style="color: #94a3b8;">{{ latest_exam.start_time.strftime('%Y-%m-%d %H:%M') }}</span>
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <strong style="color: #e2e8f0;">Access Link:</strong><br>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+          <code id="examLink" style="
+            background: #1e293b; 
+            color: #22c55e; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            font-family: monospace; 
+            font-size: 12px;
+            word-break: break-all;
+            flex: 1;
+          ">http://127.0.0.1:5000/exam/start/{{ latest_exam.exam_token }}</code>
+          <button onclick="copyExamLink()" style="
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 12px;
+            transition: background 0.2s;
+          " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+            Copy
+          </button>
+        </div>
+      </div>
+    {% else %}
+      <div style="color: #94a3b8; text-align: center; padding: 20px 0;">
+        <strong>No exam scheduled</strong>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function copyExamLink() {
+    const linkElement = document.getElementById('examLink');
+    const textToCopy = linkElement.textContent;
+    
+    navigator.clipboard.writeText(textToCopy).then(function() {
+        // Show success feedback
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.style.background = '#22c55e';
+        
+        setTimeout(function() {
+            button.textContent = originalText;
+            button.style.background = '#3b82f6';
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Failed to copy: ', err);
+    });
+}
+</script>
+
+>>>>>>> c0b915eff67d0cf145739fbd2c968b9cc66371d3
 <style>
 .admin-controls {
     display: flex;
