@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+{% block body_class %}page-dashboard{% endblock %}
+{% block title %}Dashboard · AI Online Exam{% endblock %}
+{% block content %}
+<style>
+html, body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body.page-dashboard {
+    background: linear-gradient(135deg, #020617, #0f172a, #1e293b) !important;
+    color: #e2e8f0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.page-dashboard .app-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.page-dashboard .full-width-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 20px 40px;
+}
+
+/* VERY IMPORTANT (ROOT FIX) */
+.page-dashboard .container {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Full width wrapper for dashboard */
+.full-width-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 20px 40px;
+}
+
+/* Full width fix for dashboard */
+.page-dashboard .container,
+.page-dashboard .main-container,
+.page-dashboard .content {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* Ensure no centering limit */
+.page-dashboard .container {
+    margin: 0 !important;
+}
+
+/* Disable any overlay/image safely */
+.page-dashboard::before,
+.page-dashboard::after,
+.dash-hero::before {
+    content: none !important;
+    display: none !important;
+}
+
+/* Prevent inherited background elements */
+.hero, .bg-image, .overlay {
+    background: none !important;
+    display: none !important;
+}
+
+.dash-hero {
+    background: transparent !important;
+}
+
+.dash-hero h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.dash-sub {
+    color: #94a3b8;
+    font-size: 16px;
+}
+
+.dash-stat-card {
+    background: rgba(15, 23, 42, 0.7);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: 0.3s ease;
+}
+
+.dash-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.dash-stat-value {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.dash-stat-label {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.highlight-card {
+    background: rgba(15, 23, 42, 0.85);
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.highlight-card h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 20px rgba(59,130,246,0.4);
+}
+
+.dash-table-card {
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 18px;
+    padding: 25px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.dash-stat-status {
+    display: none !important;
+}
+
+.student-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    margin-bottom: 25px;
+    padding: 18px 22px;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.student-avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+    color: white;
+}
+
+.student-info h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.status-badge {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(34,197,94,0.15);
+    color: #22c55e;
+}
+
+.history-card {
+    background: rgba(15,23,42,0.7);
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+}
+
+.perf-grid {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+}
+
+.perf-insight {
+    color: #94a3b8;
+}
+
+.dash-actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-outline {
+  padding: 10px 16px;
+  border: 1px solid #3b82f6;
+  background: transparent;
+  color: #3b82f6;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #0b1220;
+  padding: 25px;
+  border-radius: 12px;
+  width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.performance-bar {
+  background: #1e293b;
+  height: 10px;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+
+.performance-bar div {
+  background: #3b82f6;
+  height: 100%;
+  border-radius: 10px;
+}
+</style>
+<section class="dash-hero">
+  <div class="dash-hero-text">
+    <h1>Dashboard</h1>
+    <p class="muted dash-sub">Overview of your exam activity and performance.</p>
+  </div>
+</section>
+
+<div class="student-card">
+  <div class="student-avatar">
+    {{ 
+      (student.name[0] if student and student.name else 
+       (student.username[0] if student and student.username else 'S')) 
+    | upper 
+    }}
+  </div>
+
+  <div class="student-info">
+    <h3>{{ 
+      student.name 
+      if student and student.name 
+      else (student.username if student and student.username else 'Student') 
+    }}</h3>
+    <p class="muted">
+      Roll No: {{ student.roll_number if student and student.roll_number else 'N/A' }}
+    </p>
+    <span class="status-badge">Active</span>
+  </div>
+</div>
+
+<div class="dash-stats">
+  <a href="{{ url_for('exam_list_page') }}" class="dash-stat-card dash-stat-exams">
+    <span class="dash-stat-icon">📋</span>
+    <div class="dash-stat-body">
+        <span class="dash-stat-value">{{ total_exams }}</span>
+        <span class="dash-stat-label">Total exams</span>
+    </div>
+  </a>
+    <a href="{{ url_for('score_page') }}" class="dash-stat-card dash-stat-score">
+    <span class="dash-stat-icon">📊</span>
+    <div class="dash-stat-body">
+        <span class="dash-stat-value">
+            {% if avg_score is not none %}{{ avg_score }}%{% else %}—{% endif %}
+        </span>
+        <span class="dash-stat-label">Avg. score</span>
+    </div>
+  </a>
+  <div class="dash-stat-card dash-stat-status">
+    <span class="dash-stat-icon" aria-hidden="true">??? </span>
+    <div class="dash-stat-body">
+      <span class="dash-stat-value dash-stat-status-text">{{ 'Done' if has_completed_exam else 'Open' }}</span>
+      <span class="dash-stat-label">Exam status</span>
+    </div>
+  </div>
+
+<!-- New Cards -->
+
+  <a href="{{ url_for('history_page') }}" class="dash-stat-card">
+    <span class="dash-stat-icon">📜</span>
+    <div class="dash-stat-body">
+      <span class="dash-stat-value">History</span>
+      <span class="dash-stat-label">View Exams</span>
+    </div>
+  </a>
+
+  </div>
+
+
+<div class="dashboard-layout">
+  <div class="card highlight-card dash-start-card">
+    <h2>Take the exam</h2>
+    <p>{{ questions_per_exam }} random questions · 30 minutes · Auto-save · Proctoring warnings (max 5)</p>
+    {% if not can_start_exam %}
+      {% if is_currently_completed %}
+      <p class="dash-blocked-msg">You have already completed the exam.</p>
+      {% else %}
+      <p class="dash-blocked-msg">Your exam access has been disabled. Contact your administrator.</p>
+      {% endif %}
+    {% else %}
+    {% if schedule %}
+
+    {% if current_time < schedule.start_time %}
+        <button class="btn btn-disabled btn-large" disabled>
+            📅 Exam not started ({{ schedule.start_time.strftime('%I:%M %p') }})
+        </button>
+
+    {% elif current_time >= schedule.start_time and current_time <= schedule.end_time %}
+        <a href="{{ url_for('exam_rules') }}" class="btn btn-primary btn-large">
+            Start Exam
+        </a>
+
+    {% else %}
+        <button class="btn btn-disabled btn-large" disabled>
+            ⏰ Exam closed
+        </button>
+    {% endif %}
+
+{% else %}
+    <a href="{{ url_for('exam_rules') }}" class="btn btn-primary btn-large">Start exam</a>
+    {% endif %}
+    {% endif %}
+    <p class="muted small">Pass mark: <strong>{{ pass_threshold }}%</strong> or higher.</p>
+  </div>
+
+  <div class="card dash-table-card">
+    <h2>Recent attempts</h2>
+    {% if attempts %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Exam Status</th>
+            <th>Score</th>
+            <th>Report</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in attempts %}
+          <tr>
+            <td>{{ a.started_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+  {% if (a.score or 0) >= 75 %}
+    <span style="color:#22c55e; font-weight:600;">PASS</span>
+  {% else %}
+    <span style="color:#ef4444; font-weight:600;">FAIL</span>
+  {% endif %}
+</td>
+            <td>
+              <span style="color:#38bdf8; font-weight:500;">Completed</span>
+            </td>
+            <td>{% if a.score is not none %}{{ a.score }}%{% else %}mdash;{% endif %}</td>
+            <td>{% if a.status == 'completed' %}<a href="{{ url_for('exam_report', attempt_id=a.id) }}">View</a>{% else %}mdash;{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="muted">No attempts yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<section class="card exam-rules-card">
+  <h2 class="exam-rules-title">Exam rules</h2>
+  <ul class="exam-rules-list">
+  <li>Your face must be visible to the camera during the exam.</li>
+
+  <li>If your face is not detected, you will be given 10 seconds to adjust.
+      If your face is still not visible after 10 seconds, a warning will be issued.</li>
+
+  <li>If multiple voices are detected, a warning will be issued.</li>
+
+  <li>Switching to another tab or leaving the exam screen will result in a warning.</li>
+
+  <li>Each time a warning is issued:
+    <ul>
+      <li>The current question will be automatically skipped.</li>
+      <li>You will be moved to the next question.</li>
+      <li>You cannot return to previous questions (they will be locked).</li>
+    </ul>
+  </li>
+</ul>
+</section>
+
+
+
+<div id="historyModal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Exam History</h2>
+
+{% if attempts %}
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Score</th>
+      <th>Status</th>
+      <th>Report</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for a in attempts %}
+    <tr>
+      <td>{{ a.started_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>{{ a.score if a.score is not none else 'mdash' }}%</td>
+      <td>{{ 'PASS' if (a.score or 0) >= pass_threshold else 'FAIL' }}</td>
+      <td>
+        {% if a.status == 'completed' %}
+        <a href="{{ url_for('exam_report', attempt_id=a.id) }}">View</a>
+        {% else %}
+        &mdash;
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p>No exams yet.</p>
+{% endif %}
+
+<button onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+
+<script>
+function openHistory() {
+  document.getElementById("historyModal").classList.remove("hidden");
+}
+
+function openPerformance() {
+  document.getElementById("performanceModal").classList.remove("hidden");
+}
+
+function closeModal() {
+  document.getElementById("historyModal").classList.add("hidden");
+  document.getElementById("performanceModal").classList.add("hidden");
+}
+</script>
+{% endblock %}

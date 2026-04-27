@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Average Score · Admin{% endblock %}
+{% block content %}
+<section class="admin-hero">
+  <h1>Average Score Overview</h1>
+  <p class="muted">System-wide average score statistics.</p>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost">« Back to Dashboard</a>
+</section>
+
+<div class="card admin-section">
+  <h2>Score Statistics</h2>
+  
+  <div class="admin-stats" style="margin-bottom: 30px;">
+    <div class="admin-stat-card">
+      <span class="admin-stat-icon" aria-hidden="true">%</span>
+      <div><strong>{{ avg_score }}%</strong><span class="muted small">Average Score</span></div>
+    </div>
+    <div class="admin-stat-card">
+      <span class="admin-stat-icon" aria-hidden="true">.</span>
+      <div><strong>{{ total_attempts }}</strong><span class="muted small">Total Attempts</span></div>
+    </div>
+  </div>
+
+  <div style="text-align: center; padding: 40px;">
+    <div style="
+      width:200px;
+      height:200px;
+      border-radius:50%;
+      background: conic-gradient(#3b82f6 {{ avg_score }}%, #1e293b 0%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:bold;
+      font-size:32px;
+      color:white;
+      margin: 0 auto;
+    ">
+      {{ avg_score }}%
+    </div>
+    <p style="margin-top: 20px; color: #94a3b8;">
+      Overall average score across all completed exams
+    </p>
+  </div>
+</div>
+{% endblock %}

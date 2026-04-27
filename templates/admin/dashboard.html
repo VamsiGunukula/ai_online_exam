@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Admin · AI Online Exam{% endblock %}
+{% block content %}
+<style>
+.card-link {
+text-decoration: none;
+color: inherit;
+display: block;
+}
+.card-link:hover {
+transform: scale(1.02);
+transition: 0.2s;
+}
+
+.admin-stats-grid {
+display: grid;
+grid-template-columns: repeat(5, 1fr);
+gap: 20px;
+margin-bottom: 30px;
+}
+
+.admin-stat-card {
+background: linear-gradient(145deg, #0f172a, #1e293b);
+border-radius: 16px;
+padding: 22px;
+box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+transition: all 0.25s ease;
+}
+
+.admin-stat-card:hover {
+transform: translateY(-4px);
+box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+}
+
+.admin-stat-title {
+font-size: 13px;
+color: #94a3b8;
+margin-bottom: 6px;
+}
+
+.admin-stat-value {
+font-size: 28px;
+font-weight: 700;
+color: #f1f5f9;
+}
+
+.admin-stat-sub {
+font-size: 12px;
+color: #64748b;
+}
+</style>
+<section class="admin-hero">
+  <p class="muted">
+    {% if is_super %}Full system control.{% else %}View-only access. Contact a super administrator to change data.{% endif %}
+    Your role: <strong>{{ 'super_admin' if session.get('admin_role') == 'super_admin' else 'admin' }}</strong>
+  </p>
+  <h1>Student Analytics</h1>
+</section>
+
+<div class="admin-stats-grid" style="
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  width: 100%;
+">
+  <a href="/admin/all-students" class="card-link">
+    <div class="admin-stat-card" style="
+  padding: 25px;
+  border-radius: 12px;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+">
+      <div class="admin-stat-title" style="
+  font-size: 20px;
+  font-weight: 600;
+  color: #cbd5e1;
+">Total Students Registered</div>
+          </div>
+  </a>
+  <a href="/admin/below-pass" class="card-link">
+    <div class="admin-stat-card" style="
+  padding: 25px;
+  border-radius: 12px;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+">
+      <div class="admin-stat-title" style="
+  font-size: 20px;
+  font-weight: 600;
+  color: #cbd5e1;
+">All Failed Students</div>
+          </div>
+  </a>
+  <a href="/admin/pass-rule" class="card-link">
+    <div class="admin-stat-card" style="
+  padding: 25px;
+  border-radius: 12px;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+">
+      <div class="admin-stat-title" style="
+  font-size: 20px;
+  font-weight: 600;
+  color: #cbd5e1;
+">All Passed Students</div>
+          </div>
+  </a>
+    <a href="/admin/high-warnings" class="card-link">
+    <div class="admin-stat-card" style="
+  padding: 25px;
+  border-radius: 12px;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+">
+      <div class="admin-stat-title" style="
+  font-size: 20px;
+  font-weight: 600;
+  color: #cbd5e1;
+">High Warning Students</div>
+          </div>
+  </a>
+</div>
+
+
+<!-- Admin Analytics Section -->
+<h2>Admin Analytics</h2>
+  
+<!-- Admin Analytics Cards -->
+<div class="admin-stats-grid" style="
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  width: 100%;
+  margin-top: 20px;
+">
+  <div class="admin-stat-card" style="
+    padding: 25px;
+    border-radius: 12px;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    cursor: pointer;
+  " onclick="location.href='/admin/add-admin'">
+    <div class="admin-stat-title" style="
+      font-size: 20px;
+      font-weight: 600;
+      color: #cbd5e1;
+    ">Add Admin</div>
+  </div>
+
+  <div class="admin-stat-card" style="
+    padding: 25px;
+    border-radius: 12px;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    cursor: pointer;
+  " onclick="location.href='/admin/create-exam'">
+    <div class="admin-stat-title" style="
+      font-size: 20px;
+      font-weight: 600;
+      color: #cbd5e1;
+    ">Schedule Exam</div>
+    {% if schedule and schedule.exam_token %}
+    <div style="margin-top: 10px; padding: 10px; background: rgba(59,130,246,0.1); border-radius: 8px; font-size: 14px;">
+      <strong style="color: #3b82f6;">Exam Access Link:</strong><br>
+      <code style="background: #1e293b; color: #22c55e; padding: 4px 8px; border-radius: 4px; font-family: monospace; word-break: break-all;">{{ url_for('exam_start_with_token', token=schedule.exam_token) }}</code>
+      <br><small style="color: #94a3b8;">Share this link with students for time-restricted access</small>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="admin-stat-card" style="
+    padding: 25px;
+    border-radius: 12px;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    cursor: pointer;
+  " onclick="location.href='/admin/exam-history'">
+    <div class="admin-stat-title" style="
+      font-size: 20px;
+      font-weight: 600;
+      color: #cbd5e1;
+    ">Exam History</div>
+  </div>
+
+  <div class="admin-stat-card" style="
+    padding: 25px;
+    border-radius: 12px;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    cursor: pointer;
+  " onclick="location.href='/admin/students'">
+    <div class="admin-stat-title" style="
+      font-size: 20px;
+      font-weight: 600;
+      color: #cbd5e1;
+    ">Block Student</div>
+  </div>
+
+  <div class="admin-stat-card" style="
+    padding: 25px;
+    border-radius: 12px;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    cursor: pointer;
+  " onclick="location.href='/admin/blocked_students'">
+    <div class="admin-stat-title" style="
+      font-size: 20px;
+      font-weight: 600;
+      color: #cbd5e1;
+    ">Blocked Students</div>
+  </div>
+
+  <div class="admin-stat-card" style="
+    padding: 25px;
+    border-radius: 12px;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    cursor: default;
+  ">
+    <div class="admin-stat-title" style="
+      font-size: 20px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 15px;
+    ">Exam Link</div>
+    
+    {% if latest_exam and latest_exam.exam_token %}
+      <div style="margin-bottom: 10px;">
+        <strong style="color: #e2e8f0;">Exam:</strong> 
+        <span style="color: #94a3b8;">{{ latest_exam.start_time.strftime('%Y-%m-%d %H:%M') }}</span>
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <strong style="color: #e2e8f0;">Access Link:</strong><br>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+          <code id="examLink" style="
+            background: #1e293b; 
+            color: #22c55e; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            font-family: monospace; 
+            font-size: 12px;
+            word-break: break-all;
+            flex: 1;
+          ">http://127.0.0.1:5000/exam/start/{{ latest_exam.exam_token }}</code>
+          <button onclick="copyExamLink()" style="
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 12px;
+            transition: background 0.2s;
+          " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+            Copy
+          </button>
+        </div>
+      </div>
+    {% else %}
+      <div style="color: #94a3b8; text-align: center; padding: 20px 0;">
+        <strong>No exam scheduled</strong>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function copyExamLink() {
+    const linkElement = document.getElementById('examLink');
+    const textToCopy = linkElement.textContent;
+    
+    navigator.clipboard.writeText(textToCopy).then(function() {
+        // Show success feedback
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.style.background = '#22c55e';
+        
+        setTimeout(function() {
+            button.textContent = originalText;
+            button.style.background = '#3b82f6';
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Failed to copy: ', err);
+    });
+}
+</script>
+
+<style>
+.admin-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.card.admin-section {
+    margin-bottom: 20px;
+}
+
+.search-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.search-input {
+    width: 320px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: white;
+    outline: none;
+    transition: 0.3s;
+}
+
+.search-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 8px rgba(56,189,248,0.4);
+}
+</style>
+
+<div class="card admin-section">
+  <h2>Staff accounts</h2>
+  <p class="muted small">Usernames and roles only.</p>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          {% if is_super %}<th></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in admin_accounts %}
+        <tr>
+          <td>{{ a.username }}</td>
+          <td>
+  {% if session.get('role') == 'super_admin' and a.admin_role == 'admin' %}
+    <form method="POST" action="{{ url_for('make_super_admin', user_id=a.id) }}">
+      <button type="submit" class="btn" style="background:#6366f1;">Make Super Admin</button>
+    </form>
+  {% else %}
+    {{ a.admin_role or 'admin' }}
+  {% endif %}
+</td>
+          {% if is_super %}
+          <td>
+            <div style="display:flex; gap:10px; align-items:center;">
+              {% if a.id != session.get('user_id') and a.admin_role != 'super_admin' %}
+              <form method="POST" action="{{ url_for('make_super_admin', user_id=a.id) }}">
+                <button type="submit" style="
+                            background:#3b82f6;
+                            color:white;
+                            border:none;
+                            padding:6px 12px;
+                            border-radius:6px;
+                            font-size:12px;
+                            cursor:pointer;
+                        ">
+                            Make Super Admin
+                </button>
+              </form>
+              {% endif %}
+
+              {% if a.id != session.get('user_id') %}
+              <form method="post" action="{{ url_for('admin_delete_admin_user', admin_id=a.id) }}" class="inline-form" onsubmit="return confirm('Remove this administrator?');">
+                <button type="submit" style="
+                            background:#ef4444;
+                            color:white;
+                            border:none;
+                            padding:6px 12px;
+                            border-radius:6px;
+                            font-size:12px;
+                            cursor:pointer;
+                        ">
+                          Remove
+                </button>
+              </form>
+              {% else %}
+              <span class="muted small">You</span>
+              {% endif %}
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card admin-section">
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+    <h2 style="margin:0;">Latest Scored Students</h2>
+    
+    <div class="search-wrapper" style="display: flex; justify-content: center;">
+        <input type="text" id="topSearch" placeholder="Search student..." style="
+     width: 320px;
+     height: 42px;
+     padding: 0 14px;
+     border-radius: 10px;
+     border: 1px solid rgba(255,255,255,0.08);
+     background: rgba(255,255,255,0.03);
+     color: #e5e7eb;
+     font-size: 14px;
+     outline: none;
+     transition: all 0.2s ease;
+ "
+ onfocus="this.style.border='1px solid #3b82f6'; this.style.background='rgba(255,255,255,0.06)'"
+ onblur="this.style.border='1px solid rgba(255,255,255,0.08)'; this.style.background='rgba(255,255,255,0.03)'"
+/>
+</div>
+</div>
+
+  <!-- 🔴 DELETE ALL BUTTON -->
+  {% if is_super %}
+  <form method="POST" action="/admin/students/delete-all"
+        onsubmit="return confirm('Delete ALL student data?');"
+        style="margin-bottom:15px;">
+    <button type="submit" class="btn btn-danger">
+      Delete All Students Data
+    </button>
+  </form>
+  {% endif %}
+
+  <p class="muted small">Students sorted with highest latest score first.</p>
+
+  <div class="table-wrap">
+    <table class="data-table admin-table" id="topTable">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Email</th>
+          <th>Attempts</th>
+          <th>Score</th>
+          <th>Status</th>
+          <th>Warnings</th>
+          {% if is_super %}<th>Access</th><th>Actions</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        {% set u = row.user %}
+        <tr>
+          <td>{{ u.username }}</td>
+          <td class="muted">{{ u.email }}</td>
+          <td>{{ row.attempt_count }}</td>
+          <td>{% if row.score is not none %}{{ row.score }}%{% else %}—{% endif %}</td>
+
+          <td>
+            {% if row.score is not none and row.score >= 75 %} <span style="
+                 color:#22c55e;
+                 font-weight:600;
+                 background:rgba(34,197,94,0.1);
+                 padding:4px 10px;
+                 border-radius:6px;
+             ">
+            PASS </span>
+            {% else %} <span style="
+                 color:#ef4444;
+                 font-weight:600;
+                 background:rgba(239,68,68,0.1);
+                 padding:4px 10px;
+                 border-radius:6px;
+             ">
+            FAIL </span>
+            {% endif %}
+          </td>
+
+          <td>{{ row.warnings if row.latest_attempt else '—' }}</td>
+
+          {% if is_super %}
+          <td>
+            <span class="muted small">{{ 'On' if u.exam_access_enabled else 'Off' }}</span>
+            <form method="post" action="{{ url_for('admin_toggle_exam_access', user_id=u.id) }}" class="inline-form">
+              <button type="submit" class="btn btn-ghost btn-small">
+                {{ 'Disable' if u.exam_access_enabled else 'Enable' }}
+              </button>
+            </form>
+          </td>
+
+          <td>
+
+            <!-- Allow Reattempt -->
+            <form method="post" action="{{ url_for('admin_grant_reattempt', user_id=u.id) }}" class="inline-form">
+              <button type="submit" class="btn btn-primary btn-small">
+                Allow Reattempt
+              </button>
+            </form>
+
+            <!-- Delete ONE student -->
+            <form method="POST"
+                  action="/admin/students/{{ u.id }}/delete"
+                  class="inline-form"
+                  onsubmit="return confirm('Delete this student completely?');">
+              <button type="submit" class="btn btn-danger btn-small">
+                Delete
+              </button>
+            </form>
+
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+
+
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#attemptsTable tbody tr");
+
+    rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+    });
+});
+</script>
+
+<script>
+document.getElementById("topSearch").addEventListener("keyup", function () {
+    let value = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#topTable tbody tr");
+
+    rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(value) ? "" : "none";
+    });
+});
+</script>
+{% endblock %}

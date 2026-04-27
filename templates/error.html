@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Error{% endblock %}
+{% block content %}
+<div style="text-align: center; margin-top: 100px;">
+    <h1 style="color: #ef4444; margin-bottom: 20px;">{{ message }}</h1>
+    <a href="{{ url_for('login') }}" style="color: #3b82f6; text-decoration: none;">Return to Login</a>
+</div>
+{% endblock %}

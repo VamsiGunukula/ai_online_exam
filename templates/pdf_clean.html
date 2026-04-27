@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Exam Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 210mm;
+            max-width: 210mm;
+            margin: 0 auto;
+            font-family: Arial, sans-serif;
+            background: white;
+            color: black;
+            font-size: 14px;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .section {
+            margin-bottom: 15px;
+        }
+        
+        h1, h2 {
+            margin-bottom: 10px;
+        }
+        
+        .section-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .info-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px solid black;
+        }
+        .info-row {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .score-big {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .status {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 10px;
+            border: 2px solid black;
+        }
+        .status-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            border-bottom: 2px solid black;
+            padding-bottom: 5px;
+        }
+        .summary-box {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid black;
+        }
+        .summary-item {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .topic-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+        }
+        .topic-name {
+            font-weight: bold;
+            display: inline-block;
+            width: 200px;
+        }
+        .topic-percent {
+            float: right;
+            font-weight: bold;
+        }
+        .list-section {
+            margin: 20px 0;
+        }
+        .list-item {
+            margin: 8px 0;
+            padding: 8px;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+        }
+        .risk-box {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid black;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .risk-low {
+            background: #d4edda;
+            color: #155724;
+        }
+        .risk-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .risk-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .recommendation-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: #f0f8ff;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- PAGE 1: EXAM REPORT -->
+<div class="header">
+    <div class="title">Exam Report</div>
+    <p>AI Online Examination System</p>
+</div>
+
+<div class="info-section">
+    <div class="info-row"><strong>Student Name:</strong> {{ student_name or "N/A" }}</div>
+    <div class="info-row"><strong>Email:</strong> {{ email or "N/A" }}</div>
+    <div class="info-row"><strong>Date:</strong> {{ date or "N/A" }}</div>
+    </div>
+
+<div class="score-big">{{ score or 0 }}%</div>
+
+<div class="status {% if status == 'PASS' %}status-pass{% else %}status-fail{% endif %}">
+    {{ status or "UNKNOWN" }}
+</div>
+
+<div class="section-title">Score Summary</div>
+<div class="summary-box">
+    <div class="summary-item"><strong>Total Questions:</strong> {{ total or 0 }}</div>
+    <div class="summary-item"><strong>Attempted:</strong> {{ attempted or 0 }}</div>
+    <div class="summary-item"><strong>Correct:</strong> {{ correct or 0 }}</div>
+    <div class="summary-item"><strong>Wrong:</strong> {{ wrong or 0 }}</div>
+    <div class="summary-item"><strong>Accuracy:</strong> {{ accuracy or 0 }}%</div>
+</div>
+
+<!-- PAGE 2: PERFORMANCE BREAKDOWN -->
+<div class="page-break"></div>
+
+<div class="section-title">Performance Breakdown</div>
+
+{% for topic in topics %}
+<div class="topic-item">
+    <span class="topic-name">{{ topic.name or "Unknown" }}</span>
+    <span class="topic-percent">{{ topic.percent or 0 }}%</span>
+</div>
+{% endfor %}
+
+<div class="section-title">Strong Topics</div>
+<div class="list-section">
+    {% for strong in strong_topics %}
+    <div class="list-item">
+        {% if strong.name %}{{ strong.name }}{% else %}{{ strong }}{% endif %}
+        {% if strong.accuracy %} - {{ strong.accuracy }}%{% endif %}
+    </div>
+    {% endfor %}
+    {% if not strong_topics %}
+    <div class="list-item">No strong topics identified</div>
+    {% endif %}
+</div>
+
+<div class="section-title">Weak Topics</div>
+<div class="list-section">
+    {% for weak in weak_topics %}
+    <div class="list-item">
+        {% if weak.name %}{{ weak.name }}{% else %}{{ weak }}{% endif %}
+        {% if weak.accuracy %} - {{ weak.accuracy }}%{% endif %}
+    </div>
+    {% endfor %}
+    {% if not weak_topics %}
+    <div class="list-item">No weak topics identified</div>
+    {% endif %}
+</div>
+
+<!-- PAGE 3: TIME + BEHAVIOR (REMOVED) -->
+<!-- <div class="page-break"></div>
+
+<div class="section-title">Time Analysis</div>
+<div class="summary-box">
+    <div class="summary-item"><strong>Total Time:</strong> {{ total_time or "N/A" }}</div>
+    <div class="summary-item"><strong>Time Used:</strong> {{ avg_time or "N/A" }}</div>
+    <div class="summary-item"><strong>Tab Switches:</strong> {{ tab_switches or 0 }}</div>
+    <div class="summary-item"><strong>Face Warnings:</strong> {{ face_warnings or 0 }}</div>
+    <div class="summary-item"><strong>Voice Warnings:</strong> {{ voice_warnings or 0 }}</div>
+    <div class="summary-item"><strong>Total Warnings:</strong> {{ warnings or 0 }}</div>
+</div> -->
+
+<div class="section-title">Cheating Risk Assessment</div>
+<div class="risk-box {% if risk_level == 'High' %}risk-high{% elif risk_level == 'Medium' %}risk-medium{% else %}risk-low{% endif %}">
+    {{ risk_level or "Low" }}
+</div>
+
+<!-- WARNING LOG SECTION REMOVED -->
+<!-- 
+<div class="section-title">Warnings Details</div>
+<div class="summary-box">
+    <div class="summary-item"><strong>Total Warnings:</strong> {{ warnings or 0 }}</div>
+    <div class="summary-item"><strong>Tab Switches:</strong> {{ tab_switches or 0 }}</div>
+    <div class="summary-item"><strong>Face Not Detected:</strong> {{ face_warnings or 0 }}</div>
+</div>
+
+{% if warning_logs %}
+<div class="section-title">Warning Log</div>
+<div class="list-section">
+    <ul>
+        {% for w in warning_logs %}
+            <li>{{ w.type }} - Question {{ w.question_no }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+<div class="section-title">Warning Log</div>
+<div class="list-section">
+    <p>No warnings triggered</p>
+</div>
+{% endif %}
+-->
+
+<!-- PAGE 4: RECOMMENDATIONS -->
+<div class="page-break"></div>
+
+<div class="section-title">Suggestions</div>
+<div class="list-section">
+    {% for recommendation in recommendations %}
+    <div class="recommendation-item">
+        {{ recommendation }}
+    </div>
+    {% endfor %}
+    {% if not recommendations %}
+    <div class="recommendation-item">No specific recommendations at this time</div>
+    {% endif %}
+</div>
+
+
+<div class="footer">
+    <p>Generated by AI Online Exam System</p>
+    <p>{{ date or "Unknown date" }}</p>
+</div>
+
+</body>
+</html>

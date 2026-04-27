@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Pass Rule · Admin{% endblock %}
+{% block content %}
+<section class="admin-hero">
+  <h1>Passed Students</h1>
+  <p class="muted">Students whose latest score is 75% or above.</p>
+</section>
+
+<div class="card admin-section">
+  <h2>Pass Rule (75%+) ({{ pass_students|length }})</h2>
+  {% if pass_students %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Roll No</th>
+          <th>Email</th>
+          <th>Latest Score</th>
+          <th>Score</th>
+          <th>Status</th>
+          <th>Exam Date</th>
+          <th>Warnings</th>
+          <th>View</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in pass_students %}
+        <tr>
+          <td>{{ item.student.username }}</td>
+          <td>{{ item.student.roll_number }}</td>
+          <td class="muted">{{ item.student.email }}</td>
+          <td>
+            <span class="badge badge-ok">{{ item.attempt.score }}%</span>
+          </td>
+          <td>
+            <span class="badge badge-ok">{{ item.attempt.score }}%</span>
+          </td>
+
+          <!-- STATUS -->
+          <td>
+            {% if item.attempt.score >= 75 %}
+              <span style="color: #28a745; font-weight: 600;">Pass</span>
+            {% else %}
+              <span style="color: #dc3545; font-weight: 600;">Fail</span>
+            {% endif %}
+          </td>
+
+          <!-- DATE ONLY -->
+          <td>
+            {{ item.attempt.started_at.strftime('%Y-%m-%d') }}
+          </td>
+
+          <td>{{ item.attempt.warning_count or 0 }}</td>
+
+          <!-- VIEW REPORT -->
+          <td>
+            <a href="/admin/report/{{ item.attempt.id }}" style="
+              background-color: #4da3ff;
+              color: white;
+              padding: 5px 10px;
+              border-radius: 5px;
+              text-decoration: none;
+              font-size: 13px;
+            ">
+              View
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No students meeting pass rule.</p>
+  {% endif %}
+</div>
+
+<style>
+.dashboard-btn {
+  background-color: #4da3ff;
+  color: white;
+  padding: 10px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* HOVER EFFECT */
+.dashboard-btn:hover {
+  transform: scale(1.05);
+}
+</style>
+
+<div style="display: flex; justify-content: center; margin-top: 30px;">
+  <a href="/admin" class="dashboard-btn">
+    Back to Dashboard
+  </a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Add Admin · Admin{% endblock %}
+{% block content %}
+<section class="admin-hero">
+  <h1>Add Administrator</h1>
+  <p class="muted">Creates a normal admin account (not super_admin).</p>
+</section>
+
+<div class="card admin-section" style="
+  max-width: 600px;
+  margin: 40px auto;
+">
+  <form method="post" action="{{ url_for('admin_create_admin') }}" class="form-stack admin-inline-form" style="
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+">
+    <div class="admin-form-row">
+      <label>
+        <span>Username</span>
+        <input type="text" name="username" required autocomplete="username">
+      </label>
+      <label>
+        <span>Email</span>
+        <input type="email" name="email" required autocomplete="email">
+      </label>
+    </div>
+    <label>
+      <span>Password (min 6 characters)</span>
+      <input type="password" name="password" required minlength="6" autocomplete="new-password">
+    </label>
+    <button type="submit" class="btn btn-primary" style="
+  width: 100%;
+  margin-top: 10px;
+">Create admin</button>
+  </form>
+</div>
+
+<div style="text-align: center; margin-top: 40px;">
+  <a href="/admin" class="btn-dashboard">
+    Back to Dashboard
+  </a>
+</div>
+
+<style>
+.admin-form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.admin-form-row label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-form-row label span {
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.form-stack label {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.form-stack label span {
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.form-stack input {
+    padding: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    color: white;
+}
+
+.form-stack input:focus {
+    outline: none;
+    border-color: #4f8cff;
+    box-shadow: 0 0 0 2px rgba(79,140,255,0.2);
+}
+
+.btn-dashboard {
+  display: inline-block;
+  padding: 12px 24px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.btn-dashboard:hover {
+  transform: scale(1.05);
+}
+</style>
+{% endblock %}

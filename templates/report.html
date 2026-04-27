@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+{% block body_class %}page-report{% endblock %}
+{% block title %}Exam report · AI Online Exam{% endblock %}
+{% block content %}
+{% set score_value = score if score is defined else 0 %}
+{% set pass_exam = score_value >= 75 %}
+
+<style>
+body.page-report {
+    background: #0f172a !important; /* dark professional navy */
+    background-image: none !important;
+}
+
+/* Remove gradient/wave backgrounds ONLY for report page */
+body.page-report::before,
+body.page-report::after,
+.page-report .background,
+.page-report .hero,
+.page-report .overlay {
+    display: none !important;
+    background: none !important;
+}
+
+/* Improve card look (clean glass effect) */
+.page-report .card {
+    background: rgba(15, 23, 42, 0.85); /* dark clean */
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(8px);
+}
+
+/* SCORE CONTAINER STYLES (NO RED BACKGROUND) */
+.report-pass,
+.report-fail {
+    background: rgba(20, 30, 50, 0.6);  /* dark theme */
+    border: 1px solid rgba(255,255,255,0.05);
+    color: white;
+}
+
+/* PASS case - green accent */
+.report-pass {
+    box-shadow: 0 10px 30px rgba(34, 197, 94, 0.25);
+}
+
+/* STYLE PERCENTAGE */
+.report-score-big {
+    font-size: 64px;
+    font-weight: bold;
+}
+
+/* FAIL case - red percentage */
+.report-fail .report-score-big {
+    color: #ff4d4d;
+}
+
+/* PASS case - green percentage */
+.report-pass .report-score-big {
+    color: #4CAF50;
+}
+
+/* STYLE RESULT TEXT */
+.text-fail {
+    color: #ff4d4d;
+    font-weight: 600;
+}
+
+.text-pass {
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+/* DOWNLOAD BUTTON DARK BLUE */
+.download-btn {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb) !important;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: 0.2s ease;
+}
+
+.download-btn:hover {
+    background: linear-gradient(135deg, #1e40af, #1d4ed8) !important;
+    transform: scale(1.05);
+}
+
+/* ADD GLOBAL SECTION SPACING */
+.section,
+.card,
+.block,
+.container > div {
+  margin-bottom: 24px;
+}
+
+/* SPECIFIC FIX (IMPORTANT) */
+/* Student Profile -> Warnings */
+.student-profile {
+  margin-bottom: 24px;
+}
+
+.weak-topics {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+}
+
+.topic-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.topic-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;   /* IMPORTANT spacing */
+}
+
+.topic-percentage {
+    min-width: 60px;
+    text-align: right;
+    margin-right: 10px;
+    font-weight: 600;
+}
+
+.topic-actions .btn {
+    min-width: 80px;
+    text-align: center;
+    border-radius: 8px;
+    padding: 6px 12px;
+}
+
+/* Warnings block */
+.warnings-section {
+  margin-top: 8px;
+}
+
+/* Strong & Weak Topics row */
+.topics-row {
+  display: flex;
+  gap: 24px;   /* spacing between both boxes */
+  margin-bottom: 24px;
+}
+
+/* Each topic box */
+.strong-topics,
+.weak-topics {
+  flex: 1;
+}
+
+/* Suggestions block */
+.suggestions {
+  margin-top: 24px;
+}
+
+/* SAFETY FALLBACK (VERY IMPORTANT) */
+/* If classes mismatch, apply universal safe spacing */
+.card + .card {
+  margin-top: 24px;
+}
+
+/* FIX ZIG-ZAG PERCENTAGES - PERFECT COLUMN ALIGNMENT */
+.weak-topic-item {
+  display: grid;
+  grid-template-columns: 1fr 80px 140px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* LEFT SIDE (TOPIC NAME) */
+.weak-topic-name {
+  /* Takes first column (1fr) automatically */
+  padding-right: 8px;
+}
+
+/* PERCENTAGE (FIX COLUMN ALIGNMENT) */
+.weak-topic-percentage {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* BUTTON GROUP */
+.weak-topic-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* SAFETY FALLBACK (if classes differ) */
+.weak-topics li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.weak-topics span:last-child {
+  width: 60px;
+  text-align: right;
+}
+
+/* Fix Warnings layout (perfect grid alignment) */
+.warnings-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 100%;
+}
+
+.warning-card {
+    width: 100%;
+}
+
+/* Center last single item (like Warning 5) */
+.warnings-container .warning-card:last-child:nth-child(odd) {
+    grid-column: span 2;
+    justify-self: center;
+    max-width: 50%;
+}
+
+/* Ensure Warnings block takes FULL width */
+.warnings-section {
+    width: 100%;
+}
+
+/* FIX 1: Equal Box Height */
+.topics-row {
+    display: flex;
+    gap: 20px;
+}
+
+.topics-box {
+    flex: 1;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* FIX 2: Align Percentages Properly */
+.topic-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topic-name {
+    flex: 1;
+}
+
+.topic-percent {
+    width: 60px;
+    text-align: right;
+    font-weight: bold;
+}
+
+/* WARNINGS BLOCK CLEAN DESIGN */
+.warnings-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.warning-item {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-left: 4px solid #ef4444;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: #e5e7eb;
+    font-size: 14px;
+}
+
+/* Fix gap between Strong Topics / Weak Topics / Suggestions */
+.topics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.suggestions-block {
+    margin-top: 10px;
+}
+
+/* FULL WIDTH FIX */
+.page-report .report-grid,
+.page-report .card,
+.page-report {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.page-report .container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 60px;
+    padding-right: 60px;
+}
+
+/* WARNINGS BLOCK FULL WIDTH */
+.report-risk-card {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.topics-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 20px;
+}
+
+@media (max-width: 768px) {
+.topics-grid {
+grid-template-columns: 1fr;
+}
+}
+
+.card {
+border-radius: 12px;
+padding: 20px;
+background: rgba(255,255,255,0.03);
+backdrop-filter: blur(6px);
+border: 1px solid rgba(255,255,255,0.08);
+}
+
+.card h3 {
+margin-bottom: 12px;
+font-size: 18px;
+}
+
+.section {
+margin-top: 25px;
+}
+
+.warnings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+}
+
+.warning-card {
+    width: 100%;
+}
+
+.center-card {
+    grid-column: 1 / span 2;
+    justify-self: center;
+    width: 60%;
+}
+</style>
+
+<!-- Debug: Verify data is passed correctly -->
+<!-- Debug Variables: score={{ score }}, total_questions={{ total_questions }}, correct_answers={{ correct_answers }} -->
+<!-- Debug Student: {{ student }} -->
+<!-- Debug Warnings count: {{ warnings|length if warnings else 0 }} -->
+<!-- Debug Strong Topics: {{ strong_topics|length if strong_topics else 0 }} -->
+<!-- Debug Weak Topics: {{ weak_topics|length if weak_topics else 0 }} -->
+
+<div id="pdf-report" style="visibility: visible !important; display: block !important; opacity: 1 !important;">
+
+  <div class="report-page-header" style="visibility: visible !important; display: block !important;">
+    <h1 style="visibility: visible !important; display: block !important;">Exam Report</h1>
+    <p class="muted" style="visibility: visible !important; display: block !important;">Performance and proctoring summary</p>
+      </div>
+
+  <section class="card report-hero-card {{ 'report-pass' if pass_exam else 'report-fail' }}">
+    <p class="report-score-label">Final Score</p>
+    <p class="report-score-big">{{ "%.2f"|format(score_value|float) }}%</p>
+    <p class="{{ 'text-pass' if pass_exam else 'text-fail' }}">{{ "PASS" if pass_exam else "FAIL" }}</p>
+    <p class="report-score-hint">
+      Correct answers: {{ correct_answers or 0 }} / {{ total_questions or 0 }}
+    </p>
+  </section>
+
+<!-- PDF Download Button -->
+<div style="text-align: center; margin: 20px 0;">
+  <a href="/report/{{ attempt.id }}/pdf-clean" class="download-btn">
+    Download PDF Report
+  </a>
+</div>
+
+<section class="card report-section">
+  <h3>Student Profile</h3>
+  <p><strong>Name:</strong> {{ student.name or "-" }}</p>
+  <p><strong>Email:</strong> {{ student.email or "-" }}</p>
+    <p><strong>Date:</strong> {{ student.date.split(' ')[0] if student.date else "-" }}</p>
+</section>
+
+<section class="report-grid">
+  <div class="card report-risk-card">
+    <h3>Warnings</h3>
+    {% if warnings and warnings|length > 0 %}
+      <ul class="warnings-list">
+        {% for w in warnings %}
+          <li class="warning-item">
+            Warning {{ loop.index }} &ndash; 
+            Question {{ w.question }} &ndash; 
+            {{ w.message }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">No warnings</p>
+    {% endif %}
+  </div>
+</section>
+
+<div class="topics-row">
+    <div class="card topics-box">
+        <h3>Strong Topics</h3>
+        {% if strong_topics and strong_topics|length > 0 %}
+          <ul class="topic-list">
+            {% for topic in strong_topics %}
+              <li>
+                <span class="topic-name">{{ topic.name }}</span>
+                <span class="topic-acc">{{ topic.accuracy }}%</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">No strong topics yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="card topics-box">
+        <h3>Weak Topics</h3>
+        {% if weak_topics and weak_topics|length > 0 %}
+          <ul class="topic-list">
+            {% for topic in weak_topics %}
+              {% set resource = learning_resources.get(topic.name) if learning_resources else None %}
+              <div class="topic-row">
+                <span class="topic-name topic-weak-em">{{ topic.name }}</span>
+
+                <div class="topic-actions">
+                  <span class="topic-percentage">{{ topic.accuracy }}%</span>
+
+                  {% if resource %}
+                    <a href="{{ resource.youtube }}" target="_blank" class="btn btn-primary">Video</a>
+                    <a href="{{ resource.website }}" target="_blank" class="btn btn-secondary">Learn</a>
+                  {% else %}
+                    <a href="https://www.youtube.com/results?search_query={{ topic.name|urlencode }}" target="_blank" class="btn btn-primary">Video</a>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">No weak topics.</p>
+        {% endif %}
+    </div>
+</div>
+
+
+
+{% if suggestions and suggestions|length > 0 %}
+<section class="card report-section">
+  <h3>Suggestions</h3>
+  <ul class="suggestion-list">
+    {% for s in suggestions %}
+      <li>{{ s }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<div class="report-actions">
+  <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+</div>
+
+</div>
+
+{% endblock %}
