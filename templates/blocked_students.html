@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="padding:40px;">
+
+    <h2 style="text-align:center; margin-bottom:30px;">
+        Blocked Students
+    </h2>
+
+    <h3 class="total-count">Total Blocked: {{ total_blocked }}</h3>
+
+    <div class="blocked-container">
+
+        {% if blocked_students %}
+
+        <table style="width:100%; text-align:center; color:white;">
+            <tr style="border-bottom:1px solid #334155;">
+                <th>Name</th>
+                <th>Roll No</th>
+                <th>Reason</th>
+                <th>Action</th>
+            </tr>
+
+            {% for b in blocked_students %}
+            <tr style="border-bottom:1px solid #1e293b;">
+                <td>{{ b.username or "Unknown" }}</td>
+                <td>{{ b.roll_number }}</td>
+                <td>{{ b.reason }}</td>
+                <td>
+                    <form method="POST" action="/admin/unblock_student/{{ b.id }}">
+                        <button class="btn btn-success btn-sm">
+                            Unblock
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+
+        </table>
+
+        {% else %}
+            <p style="text-align:center;">No blocked students</p>
+        {% endif %}
+
+    </div>
+
+<div class="back-box">
+    <a href="/admin" class="back-btn">← Back to Dashboard</a>
+</div>
+
+</div>
+
+<style>
+.blocked-container {
+    width: 80%;
+    margin: 30px auto;
+    padding: 25px;
+    background: #0f172a;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.total-count {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #38bdf8;
+    font-weight: bold;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    color: #94a3b8;
+    padding-bottom: 10px;
+}
+
+td {
+    text-align: center;
+    padding: 10px 0;
+}
+
+tr {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.back-box {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.back-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    font-size: 16px;
+    color: white;
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    transition: 0.3s ease;
+    min-width: 220px;
+}
+
+.back-btn:hover {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+</style>
+
+{% endblock %}

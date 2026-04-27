@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Exam History · Admin{% endblock %}
+{% block content %}
+<section class="admin-hero">
+  <h1>Exam History</h1>
+</section>
+
+<div class="card admin-section">
+  <!-- Search Bar -->
+    <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+      <input 
+        type="text" 
+        id="examSearch" 
+        placeholder="Search exam..." 
+        style="width: 350px; padding: 10px 15px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.05); color: #e2e8f0; font-size: 14px;"
+      >
+    </div>
+  
+  <!-- All Exams Table -->
+  <h3 style="margin: 30px 0 20px 0; color: #e2e8f0;">All Exams</h3>
+  
+  <div class="exams-table">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Exam Name</th>
+          <th>Starting Date</th>
+          <th>Starting Time</th>
+          <th>Ending Date</th>
+          <th>Ending Time</th>
+          <th>Total Students Attempted</th>
+          <th>STATUS</th>
+          <th>STUDENTS</th>
+          <th>DELETE EXAM</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if exams %}
+          {% for exam in exams %}
+            <tr class="exam-row" data-exam="{{ exam.subject_name or 'Exam' }}" data-date="{{ exam.start_time.strftime('%Y-%m-%d') }}">
+              <td>{{ exam.subject_name }}</td>
+              <td>{{ exam.start_time.strftime('%Y-%m-%d') }}</td>
+              <td>{{ exam.start_time.strftime('%I:%M %p') }}</td>
+              <td>{{ exam.end_time.strftime('%Y-%m-%d') }}</td>
+              <td>{{ exam.end_time.strftime('%I:%M %p') }}</td>
+              <td>{{ exam.total_students or 0 }}</td>
+              <td>
+                {% if exam.status == "RUNNING" %}
+                  <span style="color: #28a745; font-weight:600;">Running</span>
+                {% elif exam.status == "COMPLETED" %}
+                  <span style="color: #6c757d; font-weight:600;">Completed</span>
+                {% else %}
+                  <span style="color: #ffc107; font-weight:600;">Not Started</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{{ url_for('admin_exam_students', exam_id=exam.id) }}" class="btn btn-primary btn-sm">
+                  View Students
+                </a>
+              </td>
+              <td>
+                <form action="{{ url_for('delete_exam', exam_id=exam.id) }}" method="POST" style="display:inline;">
+                  <button type="submit" class="btn btn-danger btn-sm"
+                      onclick="return confirm('Delete this exam?');">
+                      Delete
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+
+        {% if not exams %}
+          <tr>
+            <td colspan="9">
+              <div class="empty-state">
+                <h3>No exams found</h3>
+                <p>No exams available.</p>
+                <p class="muted">Once exams are created, they will appear here.</p>
+              </div>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div style="text-align: center; margin-top: 40px;">
+  <a href="/admin" class="btn-dashboard">
+    Back to Dashboard
+  </a>
+</div>
+
+<style>
+/* Search Bar */
+.search-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 250px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    color: #e2e8f0;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #4f8cff;
+    box-shadow: 0 0 0 2px rgba(79,140,255,0.2);
+}
+
+/* Horizontal Table Layout */
+.exams-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.exams-table th,
+.exams-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.2s ease;
+}
+
+.exams-table th {
+    background: rgba(255,255,255,0.08);
+    font-weight: 600;
+    color: #e2e8f0;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.exams-table td {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.exams-table tbody tr:hover {
+    background: rgba(79,140,255,0.08);
+}
+
+.exams-table tbody tr:hover td {
+    color: #e2e8f0;
+    border-bottom-color: rgba(79,140,255,0.2);
+}
+
+/* Button Styling */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-sm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(79,140,255,0.3);
+}
+
+/* Current Exam Highlight */
+.highlight-row {
+    background: rgba(34,197,94,0.08);
+    border-left: 3px solid #22c55e;
+}
+
+/* Current Exam Card */
+.current-exam-card {
+    background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.current-exam-header {
+    margin-bottom: 15px;
+}
+
+.current-exam-header h3 {
+    margin: 0;
+    color: #22c55e;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.current-exam-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+}
+
+.exam-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
+}
+
+.info-label {
+    font-size: 13px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 14px;
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 40px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.empty-state h3 {
+    margin: 0 0 20px 0;
+    color: #e2e8f0;
+}
+
+.empty-state p {
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .search-container {
+        position: relative;
+        top: 0;
+        right: 0;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    .exams-table th,
+    .exams-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    
+    .current-exam-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-label {
+        font-size: 12px;
+    }
+    
+    .info-value {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .exams-table th,
+    .exams-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    .current-exam-card {
+        padding: 15px;
+    }
+    
+    .current-exam-header h3 {
+        font-size: 18px;
+    }
+    
+    .info-value {
+        font-size: 12px;
+    }
+}
+
+.btn-dashboard {
+  display: inline-block;
+  padding: 12px 28px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: 0.2s ease;
+  font-weight: 500;
+}
+
+.btn-dashboard:hover {
+  transform: scale(1.05);
+}
+</style>
+
+<script>
+// Real-time exam search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('examSearch');
+    const examRows = document.querySelectorAll('.exam-row');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        examRows.forEach(row => {
+            const examName = (row.dataset.exam || '').toLowerCase();
+            const examDate = row.dataset.date || '';
+            
+            if (examName.includes(searchTerm) || examDate.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block body_class %}page-exam exam-secure{% endblock %}
+{% block title %}Exam · AI Online Exam{% endblock %}
+{% block content %}
+<div class="exam-with-nav" id="exam-root"
+     data-attempt-id="{{ attempt_id }}"
+     data-state-url="{{ url_for('api_exam_state', attempt_id=attempt_id) }}"
+     data-answer-url="{{ url_for('api_save_answer', attempt_id=attempt_id) }}"
+     data-nav-url="{{ url_for('api_navigate', attempt_id=attempt_id) }}"
+     data-flag-url="{{ url_for('api_toggle_flag', attempt_id=attempt_id) }}"
+     data-submit-url="{{ url_for('api_submit', attempt_id=attempt_id) }}"
+     data-profile-url="{{ url_for('api_exam_profile', attempt_id=attempt_id) }}"
+     data-telemetry-url="{{ url_for('api_telemetry', attempt_id=attempt_id) }}"
+     data-auto-submit-url="{{ url_for('auto_submit_exam') }}"
+     data-student-name="{{ student_name }}"
+     data-student-email="{{ student_email }}"
+     data-dashboard-url="{{ url_for('dashboard') }}">
+  <audio id="warningSound" src="{{ url_for('static', filename='sounds/warning.mp3') }}" preload="auto"></audio>
+    <aside class="exam-nav-panel" aria-label="Question navigation">
+    <p class="exam-nav-title muted small">Questions</p>
+    <div id="nav-grid" class="qnav-grid" role="toolbar"></div>
+    <ul class="qnav-legend-list" aria-hidden="true">
+      <li><span class="qnav-swatch qnav-swatch--answered"></span> Answered</li>
+      <li><span class="qnav-swatch qnav-swatch--empty"></span> Unanswered</li>
+      <li><span class="qnav-swatch qnav-swatch--flagged"></span> Flagged</li>
+      <li><span class="qnav-swatch qnav-swatch--current"></span> Current</li>
+    </ul>
+  </aside>
+  <div class="exam-main-col">
+<div id="warning-bar" class="warning-bar" role="status" aria-live="polite">
+  Warnings: <span id="warning-count">0</span> / 5
+</div>
+    <div id="live-alert-root" class="live-alert-root" role="alert" aria-live="assertive"></div>
+
+    <div class="exam-toolbar card">
+      <div class="timer-block">
+        <span class="timer-label">Time left</span>
+        <span id="timer-display" class="timer-display">--:--</span>
+      </div>
+      <div class="progress-block">
+        <span id="progress-text" class="muted">Question — / —</span>
+        <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="card exam-monitor-card">
+      <div class="exam-monitor-row">
+        <div class="exam-video-wrap">
+          <video id="exam-video" autoplay muted></video>
+        </div>
+        <div class="exam-monitor-meta">
+          <p class="exam-topic-pill" id="question-topic">Topic —</p>
+          <p id="face-status">Checking...</p>
+          <p id="face-timer" class="hidden"></p>
+        </div>
+      </div>
+    </div>
+    <div id="exam-finished" class="card exam-finished hidden">
+      <h2>Exam submitted</h2>
+      <p>Opening your report…</p>
+      <p class="muted small">If nothing happens, <a id="back-dash" href="{{ url_for('dashboard') }}">return to dashboard</a>.</p>
+    </div>
+
+    <div id="exam-active" class="card exam-question-card">
+      <p id="question-text" class="question-text">Loading…</p>
+      <div id="options" class="options-grid options-grid-cards"></div>
+      <div class="exam-flag-row">
+        <button type="button" id="btn-flag" class="btn btn-ghost btn-small">Flag for review</button>
+        <span id="flag-hint" class="muted small"></span>
+      </div>
+      <div class="exam-actions">
+        <button type="button" id="btn-prev" class="btn btn-ghost">Previous</button>
+        <span id="autosave-hint" class="muted small">Answers save automatically</span>
+        <button type="button" id="btn-next" class="btn btn-secondary">Next</button>
+      </div>
+      <div class="exam-actions submit-row">
+        <button type="button" id="btn-submit" class="btn btn-primary">Submit exam</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Submit Modal -->
+<div id="submitModal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Submit Exam?</h2>
+    <p>Are you sure you want to submit your exam?</p>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="confirmSubmit()">Yes, Submit</button>
+      <button class="btn btn-ghost" onclick="closeSubmitModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<style>
+/* Default option */
+.option {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #cbd5f5;
+    transition: all 0.2s ease;
+    padding: 14px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.option label {
+    display: block;
+    cursor: pointer;
+    padding: 14px;
+    border-radius: 10px;
+}
+
+/* Hover effect */
+.option:hover {
+    border-color: #3b82f6;
+    background: #1e293b;
+}
+
+/* ✅ SELECTED OPTION (MAIN FIX) */
+.option input[type="radio"]:checked + label,
+.option.selected {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border: 2px solid #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(59,130,246,0.6);
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
+/* Option text stronger */
+.option.selected span,
+.option.selected label {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Option letter badge (A, B, C, D) */
+.option.selected .option-label {
+    background: #3b82f6;
+    color: white;
+    border-radius: 6px;
+    padding: 4px 8px;
+}
+
+/* Left highlight bar */
+.option.selected::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: #3b82f6;
+    border-radius: 10px 0 0 10px;
+}
+
+/* STRONG SELECTED OVERRIDE */
+.option.selected {
+    background: #2563eb !important;
+    border: 2px solid #3b82f6 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(59,130,246,0.8) !important;
+    transform: scale(1.02);
+}
+
+.option.selected * {
+    color: #ffffff !important;
+}
+
+/* Make option clickable */
+.option {
+    cursor: pointer;
+    padding: 14px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+</style>
+<script src="{{ url_for('static', filename='js/face-api.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/exam.js') }}"></script>
+<script>
+function openSubmitModal() {
+  document.getElementById("submitModal").classList.remove("hidden");
+}
+
+function closeSubmitModal() {
+  document.getElementById("submitModal").classList.add("hidden");
+}
+
+function confirmSubmit() {
+    closeSubmitModal();
+
+    const root = document.getElementById("exam-root");
+    if (!root) return;
+
+    fetch(root.dataset.submitUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.report_url) {
+            window.location.href = data.report_url;
+        } else {
+            console.error("Submit failed");
+        }
+    })
+    .catch(err => {
+        console.error("Submit error", err);
+    });
+}
+
+// Fix submit button click event
+document.addEventListener("DOMContentLoaded", function () {
+    const submitBtn = document.getElementById("btn-submit");
+    if (submitBtn) {
+        submitBtn.addEventListener("click", openSubmitModal);
+    }
+
+    // Force strong option selection visibility
+    document.querySelectorAll('.option input').forEach(input => {
+        input.addEventListener('change', function() {
+            // remove previous selection
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            // add selected class
+            this.closest('.option').classList.add('selected');
+        });
+    });
+});
+</script>
+{% endblock %}

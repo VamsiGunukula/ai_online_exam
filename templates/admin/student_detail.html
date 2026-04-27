@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Student Report · Admin{% endblock %}
+{% block content %}
+
+<div style="padding:20px;">
+    <h2>Student Report</h2>
+
+{% if student %}
+    <p><strong>Name:</strong> {{ student.name if student.name else '-' }}</p>
+    <p><strong>Email:</strong> {{ student.email if student.email else '-' }}</p>
+    <p><strong>Username:</strong> {{ student.username if student.username else '-' }}</p>
+    <p><strong>Roll Number:</strong> {{ student.roll_number if student.roll_number else 'N/A' }}</p>
+    <p><strong>Exam Access:</strong> {{ 'Enabled' if student.exam_access_enabled else 'Disabled' }}</p>
+    <p><strong>Exam Completed:</strong> {{ 'Yes' if student.exam_completed else 'No' }}</p>
+{% else %}
+    <p>No detailed data available</p>
+{% endif %}
+
+<br>
+<a href="/admin/students" class="btn btn-ghost">« Back to Students</a>
+</div>
+
+{% endblock %}

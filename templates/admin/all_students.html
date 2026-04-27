@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="padding:30px;">
+
+    <h2 style="margin: 0; margin-bottom: 20px;">
+    All Registered Students
+  </h2>
+
+<div style="
+  margin-top: 10px;
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: #94a3b8;
+">
+  Total Students: 
+  <span style="
+    font-size: 22px;
+    font-weight: 600;
+    color: #38bdf8;
+  ">
+    {{ students|length }}
+  </span>
+</div>
+
+<div style="display: flex; justify-content: center; margin: 20px 0;">
+  <input 
+    type="text" 
+    id="studentSearch" 
+    placeholder="Search by Name or Roll No..." 
+    style="
+      width: 50%;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 14px;
+    "
+    onkeyup="filterStudents()"
+  >
+</div>
+
+    <div style="
+        background:#0f172a;
+        padding:20px;
+        border-radius:12px;
+    ">
+
+        <table id="studentsTable" style="width:100%; border-collapse:collapse; text-align:center;">
+
+            <thead>
+                <tr style="border-bottom:1px solid #334155; color:#38bdf8;">
+                    <th style="padding:12px;">Name</th>
+                    <th style="padding:12px;">Roll No</th>
+                    <th style="padding:12px;">Email</th>
+                    <th style="padding:12px;">Registered Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for s in students %}
+                <tr style="border-bottom:1px solid #1e293b;">
+                    <td style="padding:12px;">{{ s.username }}</td>
+                    <td style="padding:12px;">{{ s.roll_number }}</td>
+                    <td style="padding:12px;">{{ s.email }}</td>
+                    <td style="padding:12px;">
+                        {{ s.created_at.strftime('%Y-%m-%d') if s.created_at else '-' }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+function filterStudents() {
+  let input = document.getElementById("studentSearch").value.toLowerCase();
+  let rows = document.querySelectorAll("#studentsTable tbody tr");
+
+  rows.forEach(row => {
+    let name = row.children[0].innerText.toLowerCase();
+    let roll = row.children[1].innerText.toLowerCase();
+
+    if (name.includes(input) || roll.includes(input)) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
+</script>
+
+<div style="display: flex; justify-content: center; margin-top: 30px;">
+  <a href="/admin" class="dashboard-btn">
+    Back to Dashboard
+  </a>
+</div>
+
+<style>
+.dashboard-btn {
+  background-color: #4da3ff;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+
+.dashboard-btn:hover {
+  transform: scale(1.05);
+}
+</style>
+
+{% endblock %}

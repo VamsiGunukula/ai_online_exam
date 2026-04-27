@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Block Student · Admin{% endblock %}
+{% block content %}
+
+<section class="admin-hero">
+  <h1 style="text-align:center;">Block Student</h1>
+  
+  <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+    <a href="/admin/blocked_students" class="btn btn-warning">
+        See Blocked Students
+    </a>
+  </div>
+</section>
+
+<div style="
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:60vh;
+">
+
+<form method="POST" action="/admin/block_student">
+
+    <input id="name" type="text" name="name" placeholder="Enter Name" required class="form-control mb-2">
+
+    <input id="roll" type="text" name="roll" placeholder="Roll No" required class="form-control mb-2">
+
+    <textarea id="reason" name="reason" placeholder="Reason" class="form-control mb-3"></textarea>
+
+    <button type="submit" class="btn btn-danger w-100">
+        Block Student
+    </button>
+
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const name = document.getElementById("name");
+    const roll = document.getElementById("roll");
+    const reason = document.getElementById("reason");
+
+    name.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            roll.focus();
+        }
+    });
+
+    roll.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            reason.focus();
+        }
+    });
+
+    reason.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            this.form.submit();
+        }
+    });
+
+});
+</script>
+
+</div>
+
+{% endblock %}

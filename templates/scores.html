@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Score History{% endblock %}
+{% block content %}
+
+<h1>Score History</h1>
+
+<div class="card">
+<table class="data-table">
+<thead>
+<tr>
+<th>Date</th>
+<th>Score</th>
+<th>Status</th>
+<th>Report</th>
+</tr>
+</thead>
+
+<tbody>
+{% for a in attempts %}
+<tr>
+<td>{{ a.started_at.strftime('%Y-%m-%d %H:%M') }}</td>
+<td>{{ a.score }}%</td>
+<td>
+  {% if a.score >= 75 %}
+    <span style="color:#22c55e; font-weight:600;">PASS</span>
+  {% else %}
+    <span style="color:#ef4444; font-weight:600;">FAIL</span>
+  {% endif %}
+</td>
+<td>
+<a href="{{ url_for('exam_report', attempt_id=a.id) }}">View</a>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<a href="{{ url_for('dashboard') }}" class="btn">← Go to Dashboard</a>
+
+{% endblock %}

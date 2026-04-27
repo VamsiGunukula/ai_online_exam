@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Exam Instructions{% endblock %}
+{% block content %}
+
+<h1>Exam Instructions</h1>
+
+
+<div class="card">
+
+<ul style="color:#94a3b8; line-height:1.8;">
+  <li>Your face must be visible during the exam.</li>
+  <li>If face is not detected &rarr; warning will be issued.</li>
+  <li>Switching tabs will trigger warnings.</li>
+  <li>Multiple warnings may auto-submit the exam.</li>
+  <li>You cannot return to previous questions after warning.</li>
+</ul>
+
+<div style="margin-top:20px;">
+  <label style="cursor:pointer;">
+    <input type="checkbox" id="agreeCheck" onchange="document.getElementById('startBtn').disabled = !this.checked;">
+    I have read all instructions
+  </label>
+</div>
+
+<form method="POST" action="/start_exam">
+    <button type="submit" id="startBtn" disabled style="
+        margin-top:20px;
+        background: #22c55e;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+    ">
+        Start Exam
+    </button>
+</form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Performance{% endblock %}
+{% block content %}
+
+<style>
+.card {
+  padding: 20px;
+  border-radius: 12px;
+  background: #0f172a;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.progress-container {
+  margin-top: 20px;
+}
+
+.progress-bar {
+  height: 10px;
+  background: #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar div {
+  height: 100%;
+  background: #3b82f6;
+}
+
+.center {
+  text-align: center;
+}
+
+.status-pass {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.status-fail {
+  color: #ef4444;
+  font-weight: 600;
+}
+</style>
+
+<h1>Performance Overview</h1>
+
+<div class="card">
+
+<!-- BASIC STATS -->
+<div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+  <p>Total Attempts: <strong>{{ attempts|default([])|length }}</strong></p>
+  <p>Average Score: <strong>{{ avg_score|default(0)|int }}%</strong></p>
+</div>
+
+<!-- STATUS -->
+<div class="center" style="margin-top:10px;">
+  {% if avg_score >= 75 %}
+    <span class="status-pass">PASS</span>
+  {% else %}
+    <span class="status-fail">FAIL</span>
+  {% endif %}
+</div>
+
+<!-- CIRCLE -->
+<div style="display:flex; justify-content:center; margin-top:20px;">
+  <div style="
+    width:160px;
+    height:160px;
+    border-radius:50%;
+    background: conic-gradient(#3b82f6 {{ avg_score|default(0)|int }}%, #1e293b 0%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    font-size:22px;
+    color:white;
+  ">
+    {{ avg_score|default(0)|int }}%
+  </div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-container">
+  <p style="margin-bottom:5px;">Progress</p>
+  <div class="progress-bar">
+    <div style="width: {{ avg_score|default(0)|int }}%;"></div>
+  </div>
+</div>
+
+<!-- PERFORMANCE ANALYSIS -->
+<div style="margin-top:20px; padding:15px; background:#020617; border-radius:10px;">
+
+<h3 style="margin-bottom:10px;">Performance Analysis</h3>
+
+{% set total = attempts|length %}
+
+{% if total >= 2 %}
+  {% set last = attempts[total - 1].score %}
+  {% set prev = attempts[total - 2].score %}
+  {% set diff = last - prev %}
+
+  <p>Previous Exam Score: <strong>{{ prev }}%</strong></p>
+  <p>Latest Exam Score: <strong>{{ last }}%</strong></p>
+
+{% elif total == 1 %}
+  <p>You have completed only one exam.</p>
+  <p>Score: <strong>{{ attempts[0].score }}%</strong></p>
+{% else %}
+  <p>No exam data available.</p>
+{% endif %}
+
+</div>
+
+</div>
+
+<a href="{{ url_for('dashboard') }}" class="btn">← Go to Dashboard</a>
+
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Below Pass Threshold · Admin{% endblock %}
+{% block content %}
+<section class="admin-hero">
+  <h1>Students Below Pass Threshold</h1>
+  <p class="muted">Students whose latest score is below 75%.</p>
+</section>
+
+<div style="display: flex; justify-content: center; margin: 20px 0;">
+  <input 
+    type="text" 
+    id="belowPassSearch" 
+    placeholder="Search by Student Name..." 
+    style="
+      width: 50%;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 14px;
+    "
+    onkeyup="filterBelowPass()"
+  >
+</div>
+
+<div class="card admin-section" style="
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: auto;
+  display: block;
+  flex: none;
+  flex-grow: 0;
+  flex-shrink: 0;
+">
+  <h2>Below Pass ({{ below_pass|length }})</h2>
+  {% if below_pass %}
+  <div class="table-wrap">
+    <table id="belowPassTable" class="data-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Roll No</th>
+          <th>Email</th>
+          <th>Latest Score</th>
+          <th>Status</th>
+          <th>Exam Date</th>
+          <th>Warnings</th>
+          <th>View</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in below_pass %}
+        <tr>
+          <td>{{ item.student.username }}</td>
+          <td>{{ item.student.roll_number }}</td>
+          <td class="muted">{{ item.student.email }}</td>
+          <td>
+            <span class="badge badge-muted">{{ item.attempt.score }}%</span>
+          </td>
+
+          <!-- STATUS -->
+          <td>
+            {% if item.attempt.score >= 75 %}
+              <span style="color: #28a745; font-weight: 600;">Pass</span>
+            {% else %}
+              <span style="color: #dc3545; font-weight: 600;">Fail</span>
+            {% endif %}
+          </td>
+
+          <td>{{ item.attempt.started_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ item.attempt.warning_count or 0 }}</td>
+
+          <!-- VIEW REPORT -->
+          <td>
+            <a href="/admin/report/{{ item.attempt.id }}" style="
+              background-color: #4da3ff;
+              color: white;
+              padding: 5px 10px;
+              border-radius: 5px;
+              text-decoration: none;
+              font-size: 13px;
+            ">
+              View
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No students below pass threshold.</p>
+  {% endif %}
+</div>
+
+<div style="display: flex; justify-content: center; margin-top: 30px;">
+  <a href="/admin" style="
+      background-color: #4da3ff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: transform 0.2s ease;
+  " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+    Back to Dashboard
+  </a>
+</div>
+
+<script>
+function filterBelowPass() {
+  let input = document.getElementById("belowPassSearch").value.toLowerCase();
+  let rows = document.querySelectorAll("#belowPassTable tbody tr");
+
+  rows.forEach(row => {
+    let name = row.children[0].innerText.toLowerCase();
+    let roll = row.children[1].innerText.toLowerCase();
+
+    if (name.includes(input) || roll.includes(input)) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
+</script>
+
+{% endblock %}

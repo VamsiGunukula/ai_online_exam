@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Create Exam · Admin{% endblock %}
+{% block content %}
+<section class="admin-hero">
+  <h1>Create Exam</h1>
+  <p class="muted">Schedule a new exam with start and end times.</p>
+</section>
+
+<div class="card admin-section" style="
+  max-width: 650px;
+  margin: 40px auto;
+">
+  <h2>Exam Scheduling</h2>
+  
+    
+  <form method="POST" action="/set-exam-time" class="schedule-box" style="display: flex; flex-direction: column; gap: 18px;">
+    
+    <div>
+      <label style="display: block; margin-bottom: 4px; font-weight: 600;">Exam Name</label>
+      <input type="text" name="subject_name" class="form-control exam-input" placeholder="Enter exam name" required>
+    </div>
+    
+    <div>
+      <label style="display: block; margin-bottom: 4px; font-weight: 600;">Start Time</label>
+      <input type="datetime-local" name="start_time" class="form-control exam-input"
+       min="{{ now.strftime('%Y-%m-%dT%H:%M') }}"
+       max="2099-12-31T23:59"
+       required>
+    </div>
+
+    <div>
+      <label style="display: block; margin-bottom: 4px; font-weight: 600;">End Time</label>
+      <input type="datetime-local" name="end_time" class="form-control exam-input"
+       min="{{ now.strftime('%Y-%m-%dT%H:%M') }}"
+       max="2099-12-31T23:59"
+       required>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="
+      width: 100%;
+      margin-top: 10px;
+    ">
+      Schedule Exam
+    </button>
+  </form>
+</div>
+
+<div style="text-align: center; margin-top: 40px;">
+  <a href="/admin" class="btn-dashboard">
+    Back to Dashboard
+  </a>
+</div>
+
+<style>
+.schedule-box input:focus {
+    outline: none;
+    border-color: #4f8cff;
+    box-shadow: 0 0 0 2px rgba(79,140,255,0.2);
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    color: #e2e8f0;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4f8cff;
+    box-shadow: 0 0 0 2px rgba(79,140,255,0.2);
+}
+
+.btn-dashboard {
+  display: inline-block;
+  padding: 12px 28px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: 0.2s ease;
+  font-weight: 500;
+}
+
+.btn-dashboard:hover {
+  transform: scale(1.05);
+}
+
+.exam-input {
+  width: 100%;
+  max-width: 600px;
+  height: 48px;
+  padding: 10px 14px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+.exam-form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.exam-form-container input {
+  width: 100%;
+  max-width: 600px;
+}
+
+.exam-form-container label {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+</style>
+{% endblock %}

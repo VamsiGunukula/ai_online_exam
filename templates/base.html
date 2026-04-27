@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AI Online Exam{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+  /* REMOVE BODY CENTERING ISSUE */
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* FIX APP-SHELL RESTRICTION (VERY IMPORTANT) */
+  .app-shell {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* REMOVE WIDTH RESTRICTION FROM CONTAINER */
+  .container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  /* FORCE FULL WIDTH WRAPPER */
+  .full-width-wrapper {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  /* ENSURE ALL MAIN BLOCKS EXPAND */
+  .dashboard,
+  .report-page,
+  .page-dashboard,
+  .page-report {
+    width: 100%;
+  }
+  </style>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <div class="page-bg-overlay page-bg-overlay--main"></div>
+  <div class="app-shell">
+    <header class="top-bar">
+      <a href="{% if session.get('is_admin') %}{{ url_for('admin_dashboard') }}{% elif session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('login') }}{% endif %}" class="brand">
+        <span class="brand-mark">AI</span>
+        <span class="brand-text">Online Exam</span>
+      </a>
+      {% if session.get('user_id') %}
+      <nav class="top-nav">
+        <span class="user-pill">{{ session.get('username') }}</span>
+        <a href="{{ url_for('admin_logout') if session.get('is_admin') else url_for('logout') }}" class="btn btn-ghost">Log out</a>
+      </nav>
+      {% endif %}
+    </header>
+    <div class="full-width-wrapper">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+    <footer class="site-footer">
+      <p style="display: none;">Smart assessment · Auto-save · Timed sessions</p>
+    </footer>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

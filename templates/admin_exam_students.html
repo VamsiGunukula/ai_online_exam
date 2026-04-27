@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Student Results · Admin{% endblock %}
+{% block content %}
+<section class="admin-hero">
+  <h1>Student Results</h1>
+  <p class="muted">View student performance and exam results.</p>
+  <a href="{{ url_for('exam_history') }}" class="btn btn-ghost">« Back to Exam History</a>
+</section>
+
+<div class="card admin-section">
+  <h2>Student Results</h2>
+  
+  {% if students and students|length > 0 %}
+
+<div class="table-wrap">
+  <table class="data-table mt-4">
+    <thead>
+      <tr>
+        <th>Student Name</th>
+        <th>Roll No</th>
+        <th>Status</th>
+        <th>Score</th>
+        <th>View Report</th>
+        <th>Reattempt</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      <tr>
+        <td>{{ s.name }}</td>
+        <td>{{ s.roll }}</td>
+
+        <td>
+          {% if s.status == "Pass" %}
+            <span class="status-pass">Pass</span>
+          {% else %}
+            <span class="status-fail">Fail</span>
+          {% endif %}
+        </td>
+
+        <td>{{ s.score }}</td>
+
+        <td>
+          <a href="{{ url_for('admin_view_report', attempt_id=s.attempt_id) }}" class="btn btn-primary btn-sm">View</a>
+        </td>
+
+        <td>
+          <a href="{{ url_for('admin_reattempt', attempt_id=s.attempt_id) }}" class="btn btn-warning btn-sm">Reattempt</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+
+<div class="text-center mt-4">
+    <h5>No students attempted this exam</h5>
+</div>
+
+{% endif %}
+</div>
+
+<style>
+/* Status Badges */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pass {
+    background: rgba(34,197,94,0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34,197,94,0.3);
+}
+
+.status-fail {
+    background: rgba(239,68,68,0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.3);
+}
+
+/* Table Styling */
+.table-wrap {
+    overflow-x: auto;
+    border-radius: 8px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.2s ease;
+}
+
+.data-table th {
+    background: rgba(255,255,255,0.08);
+    font-weight: 600;
+    color: #e2e8f0;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table td {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* Clean spacing CSS for table layout */
+.data-table th {
+    padding: 14px 18px;
+    text-align: left;
+}
+
+.data-table td {
+    padding: 14px 18px;
+}
+
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+    width: 20%;
+}
+
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+    width: 12%;
+}
+
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+    width: 12%;
+}
+
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) {
+    width: 10%;
+}
+
+.data-table th:nth-child(5),
+.data-table td:nth-child(5),
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+    width: 18%;
+}
+
+/* Center buttons */
+.data-table td:nth-child(5),
+.data-table td:nth-child(6) {
+    text-align: center;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(79,140,255,0.08);
+}
+
+.data-table tbody tr:hover td {
+    color: #e2e8f0;
+    border-bottom-color: rgba(79,140,255,0.2);
+}
+
+/* Button Styling */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-sm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(79,140,255,0.3);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 40px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.empty-state h3 {
+    margin: 0 0 20px 0;
+    color: #e2e8f0;
+}
+
+.empty-state p {
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .data-table th,
+    .data-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .data-table th,
+    .data-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    .status-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+}
+</style>
+{% endblock %}

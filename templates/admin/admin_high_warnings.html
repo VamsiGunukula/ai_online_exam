@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}High Warnings · Admin{% endblock %}
+{% block content %}
+<section class="admin-hero">
+  <h1>High Warning Users</h1>
+  <p class="muted">Students who received warnings during exams.</p>
+</section>
+
+<div style="display: flex; justify-content: center; margin: 20px 0;">
+  <input 
+    type="text" 
+    id="highWarningSearch" 
+    placeholder="Search by Name or Roll No..." 
+    style="
+      width: 50%;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 14px;
+    "
+    onkeyup="filterHighWarnings()"
+  >
+</div>
+
+<div class="card admin-section">
+  <h2>High Warning Users ({{ high_warning_users|length }})</h2>
+  {% if high_warning_users %}
+  <div class="table-wrap">
+    <table id="highWarningTable" class="data-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Roll No</th>
+          <th>Email</th>
+          <th>Warning Count</th>
+          <th>Exam Date</th>
+          <th>Status</th>
+          <th>View</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in high_warning_users %}
+        <tr>
+          <td>{{ item.user.username }}</td>
+          <td>{{ item.user.roll_number }}</td>
+          <td class="muted">{{ item.user.email }}</td>
+
+          <!-- WARNING COUNT COLOR -->
+          <td>
+            {% if item.warnings >= 4 %}
+              <span style="color: #dc3545; font-weight: 600;">
+                {{ item.warnings }}
+              </span>
+            {% elif item.warnings == 3 %}
+              <span style="color: #ffc107; font-weight: 600;">
+                {{ item.warnings }}
+              </span>
+            {% else %}
+              <span style="color: #28a745; font-weight: 600;">
+                {{ item.warnings }}
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- DATE ONLY -->
+          <td>
+            {{ item.attempt.started_at.strftime('%Y-%m-%d') }}
+          </td>
+
+          <td>
+            <span class="badge badge-{{ 'ok' if item.attempt.status == 'completed' else 'muted' }}">
+              {{ item.attempt.status }}
+            </span>
+          </td>
+
+          <!-- VIEW REPORT -->
+          <td>
+            <a href="/admin/report/{{ item.attempt.id }}" style="
+              background-color: #4da3ff;
+              color: white;
+              padding: 5px 10px;
+              border-radius: 5px;
+              text-decoration: none;
+              font-size: 13px;
+            ">
+              View
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No students with warnings.</p>
+  {% endif %}
+</div>
+
+<style>
+.dashboard-btn {
+  background-color: #4da3ff;
+  color: white;
+  padding: 10px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+
+.dashboard-btn:hover {
+  transform: scale(1.05);
+}
+</style>
+
+<div style="display: flex; justify-content: center; margin-top: 30px;">
+  <a href="/admin" class="dashboard-btn">
+    Back to Dashboard
+  </a>
+</div>
+
+<script>
+function filterHighWarnings() {
+  let input = document.getElementById("highWarningSearch").value.toLowerCase();
+  let rows = document.querySelectorAll("#highWarningTable tbody tr");
+
+  rows.forEach(row => {
+    let name = row.children[0].innerText.toLowerCase();
+    let roll = row.children[1].innerText.toLowerCase();
+
+    if (name.includes(input) || roll.includes(input)) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
+</script>
+
+{% endblock %}

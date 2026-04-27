@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin{% endblock %}
+{% block title %}Exam Students · Admin{% endblock %}
+{% block content %}
+<section class="admin-hero">
+  <h1>Exam Students</h1>
+  <p class="muted">Students who attended: {{ exam.subject_name }}</p>
+  <p class="muted small">
+    Exam Period: {{ exam.start_time.strftime('%Y-%m-%d %H:%M') }} to {{ exam.end_time.strftime('%Y-%m-%d %H:%M') }}
+  </p>
+  <a href="{{ url_for('exam_history') }}" class="btn btn-ghost">« Back to Exam History</a>
+</section>
+
+<div class="card admin-section">
+  <h2>Student Results</h2>
+  
+  <div class="table-wrap">
+    {% if students %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Score</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td>{{ student.name }}</td>
+          <td>{{ student.score }}%</td>
+          <td>
+            {% if student.status == 'Pass' %}
+              <span class="badge bg-success">{{ student.status }}</span>
+            {% else %}
+              <span class="badge bg-danger">{{ student.status }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p>No students attended this exam.</p>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.bg-success {
+    background-color: rgba(34,197,94,0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34,197,94,0.3);
+}
+
+.bg-danger {
+    background-color: rgba(239,68,68,0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.3);
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.data-table th {
+    background: rgba(255,255,255,0.05);
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.data-table td {
+    color: #94a3b8;
+}
+</style>
+{% endblock %}

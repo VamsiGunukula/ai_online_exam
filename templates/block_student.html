@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div id="block-page">
+
+  <h1 class="main-heading">Block Student</h1>
+
+  <div id="block-card">
+
+<form method="POST">
+
+  <input type="text" name="name" placeholder="Enter Name" required>
+
+  <input type="text" name="roll_no" placeholder="Roll No" required>
+
+  <textarea name="reason" placeholder="Reason" required></textarea>
+
+  <button type="submit">Block Student</button>
+
+</form>
+
+<a href="/admin/blocked_students" class="blocked-btn">
+  See Blocked Students
+</a>
+
+  </div>
+
+  <a href="/admin" id="back-btn">Back to Dashboard</a>
+
+</div>
+
+<style>
+#block-page {
+display: flex;
+flex-direction: column;
+align-items: center;
+margin-top: 60px;   /* 🔥 reduced from 100 */
+}
+
+.main-heading {
+font-size: 36px;
+color: #e2e8f0;
+margin-bottom: 30px;
+}
+
+#block-card {
+width: 380px;
+background: #0f172a;
+padding: 30px;
+border-radius: 12px;
+text-align: center;
+}
+
+#block-card form {
+display: flex;
+flex-direction: column;
+gap: 18px;
+}
+
+#block-card input,
+#block-card textarea {
+width: 100%;
+padding: 12px;
+border-radius: 8px;
+border: none;
+background: rgba(255,255,255,0.08);
+color: white;
+}
+
+#block-card textarea {
+height: 90px;
+}
+
+#block-card button {
+width: 100%;
+padding: 12px;
+background: #dc2626;
+border: none;
+border-radius: 8px;
+color: white;
+}
+
+/* NEW BUTTON */
+.blocked-btn {
+display: block;
+margin-top: 15px;
+padding: 10px;
+background: #2563eb;
+color: white;
+border-radius: 8px;
+text-decoration: none;
+}
+
+/* DASHBOARD BUTTON UP */
+#back-btn {
+margin-top: 25px;   /* 🔥 reduced */
+padding: 12px 26px;
+background: #3b82f6;
+color: white;
+border-radius: 8px;
+text-decoration: none;
+}
+
+.btn-block {
+  color: white;
+  font-size: 15px;
+  width: 100%;
+  background: #dc2626;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.block-form textarea {
+  height: 80px;
+  resize: none;
+}
+
+.btn-block:hover {
+  transform: scale(1.05);
+}
+
+.dashboard-wrap {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.btn-dashboard {
+  padding: 10px 24px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.btn-dashboard:hover {
+  transform: scale(1.05);
+}
+</style>
+
+{% endblock %}

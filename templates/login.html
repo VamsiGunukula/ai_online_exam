@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block body_class %}page-login{% endblock %}
+{% block title %}Log in · AI Online Exam{% endblock %}
+{% block content %}
+<style>
+html, body {
+    background: #020617 !important;
+    background-image: none !important;
+}
+
+/* Kill any inherited backgrounds */
+body::before,
+body::after {
+    display: none !important;
+}
+
+/* Remove overlay / hero / image containers */
+.hero,
+.bg-image,
+.overlay,
+.background,
+.page-login::before,
+.page-login::after,
+.page-register::before,
+.page-register::after {
+    display: none !important;
+    background: none !important;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    min-height: 100vh;
+}
+
+.main-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.auth-card {
+    background: #0b1220;
+    padding: 35px;
+    border-radius: 18px;
+    width: 360px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.auth-card h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #ffffff;
+}
+
+.auth-card input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #020617;
+    color: #e2e8f0;
+}
+
+.auth-card input:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+
+.auth-card button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.auth-card button:hover {
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+}
+</style>
+
+<section class="auth-card">
+  <h1>Welcome back</h1>
+  <p class="muted">Sign in to access your dashboard and exams.</p>
+  <form method="post" class="form-stack" autocomplete="on">
+    <label>
+      <span>Username</span>
+      <input type="text" name="username" required autofocus>
+    </label>
+    <label>
+      <span>Roll Number</span>
+      <input type="text" name="roll_number">
+    </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="password" required>
+    </label>
+    <button type="submit" class="btn btn-primary btn-block">Log in</button>
+  </form>
+  <p class="auth-switch">No account? <a href="{{ url_for('register') }}">Register</a></p>
+  <p class="auth-switch muted small">Staff: <a href="{{ url_for('admin_login_page') }}">Admin sign in</a></p>
+</section>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const username = document.querySelector('input[name="username"]');
+    const roll = document.querySelector('input[name="roll_number"]');
+    const password = document.querySelector('input[name="password"]');
+
+    username.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            roll.focus();
+        }
+    });
+
+    roll.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            password.focus();
+        }
+    });
+
+    password.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            password.form.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

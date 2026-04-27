@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block body_class %}page-admin-login{% endblock %}
+{% block title %}Admin sign in · AI Online Exam{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Admin sign in</h1>
+  <p class="muted">Staff access. Student accounts use the regular login.</p>
+  <form method="post" class="form-stack" autocomplete="on">
+    <label>
+      <span>Username</span>
+      <input type="text" name="username" required autofocus>
+    </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="password" required>
+    </label>
+    <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+  </form>
+  <p class="auth-switch"><a href="{{ url_for('login') }}">Student login</a></p>
+</section>
+{% endblock %}

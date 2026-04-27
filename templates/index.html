@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome - AI Online Exam</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #020617;
+            color: white;
+            font-family: Arial;
+        }
+
+        .card {
+            background: #0f172a;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 100px;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: #6366f1;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <!-- LOGO -->
+    <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo">
+
+    <h1>KRISHNA UNIVERSITY</h1>
+    <p>Online Examination System</p>
+
+    <button>Enter</button>
+
+</div>
+
+</body>
+</html>
