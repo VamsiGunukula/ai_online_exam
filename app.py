@@ -321,27 +321,6 @@ def _add_column_if_missing(table, column, ddl):
     except Exception:
         db.session.rollback()
 
-
-def safe_add_block_columns():
-    from sqlalchemy import text
-
-    try:
-        db.session.execute(text("ALTER TABLE users ADD COLUMN is_blocked BOOLEAN DEFAULT 0"))
-    except:
-        pass
-
-    try:
-        db.session.execute(text("ALTER TABLE users ADD COLUMN block_reason TEXT"))
-    except:
-        pass
-
-    try:
-        db.session.execute(text("ALTER TABLE exam_schedule ADD COLUMN exam_token VARCHAR(255)"))
-    except:
-        pass
-    db.session.commit()
-
-
 def ensure_block_columns():
     """Ensure block columns exist before using them."""
     from sqlalchemy import text
@@ -2690,7 +2669,6 @@ with app.app_context():
 with app.app_context():
     try:
         from sqlalchemy import text
-        db.session.execute(text("ALTER TABLE blocked_roll ADD COLUMN username TEXT"))
         db.session.commit()
         print("username column added successfully")
     except Exception as e:
