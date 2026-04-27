@@ -87,7 +87,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///exam.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Test mode for forcing all correct answers to option "C"
-TEST_MODE = True
+TEST_MODE = False
 
 db = SQLAlchemy(app)
 
@@ -725,17 +725,11 @@ def finalize_attempt(attempt):
             print(f"  Selected: '{ans.selected}' (type: {type(ans.selected)})")
             print(f"  Selected upper: '{ans.selected.upper()}'")
             
-            if TEST_MODE:
-                # In test mode, treat "C" as correct answer for all questions
-                expected = "C"
-                is_correct = ans.selected.upper() == "C"
-                print(f"  TEST_MODE - Expected: '{expected}'")
-            else:
-                # Normal mode: compare with actual correct answer
-                expected = q.correct_answer.upper()
-                is_correct = ans.selected.upper() == q.correct_answer.upper()
-                print(f"  NORMAL MODE - Expected: '{expected}'")
-                print(f"  Actual correct_answer: '{q.correct_answer}' (type: {type(q.correct_answer)})")
+            # Normal mode: compare with actual correct answer
+            expected = q.correct_answer.upper()
+            is_correct = ans.selected.upper() == q.correct_answer.upper()
+            print(f"  Expected: '{expected}'")
+            print(f"  Actual correct_answer: '{q.correct_answer}' (type: {type(q.correct_answer)})")
             
             print(f"  Comparison: '{ans.selected.upper()}' == '{expected}' = {is_correct}")
             
@@ -775,12 +769,8 @@ def build_report_data(attempt):
         by_topic[topic]["total"] += 1
         selected = (ans.selected or "").upper() if ans else ""
         
-        if TEST_MODE:
-            # In test mode, treat "C" as correct answer for all questions
-            is_correct = selected == "C"
-        else:
-            # Normal mode: compare with actual correct answer
-            is_correct = bool(selected and selected == q.correct_answer.upper())
+        # Normal mode: compare with actual correct answer
+        is_correct = bool(selected and selected == q.correct_answer.upper())
             
         if is_correct:
             by_topic[topic]["correct"] += 1
@@ -1318,7 +1308,7 @@ def exam_report(attempt_id):
         q = db.session.get(Question, qid)
         ans = Answer.query.filter_by(attempt_id=attempt.id, question_id=qid).first()
         selected = (ans.selected or "").upper() if ans and ans.selected else None
-        correct = "C"
+        correct = q.correct_answer.upper() if q else "N/A"
         if not selected:
             status = "Skipped"
         elif selected == correct:
