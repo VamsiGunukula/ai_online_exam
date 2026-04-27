@@ -1,9 +1,6 @@
 import json
 import random
-<<<<<<< HEAD
-=======
 import uuid
->>>>>>> c0b915eff67d0cf145739fbd2c968b9cc66371d3
 from datetime import datetime, timezone, timedelta
 
 def get_running_exam():
@@ -167,11 +164,6 @@ class ExamSchedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
-<<<<<<< HEAD
-=======
-    exam_token = db.Column(db.String(255), nullable=True)
->>>>>>> c0b915eff67d0cf145739fbd2c968b9cc66371d3
-
 
 class ExamHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -343,14 +335,10 @@ def safe_add_block_columns():
     except:
         pass
 
-<<<<<<< HEAD
-=======
     try:
         db.session.execute(text("ALTER TABLE exam_schedule ADD COLUMN exam_token VARCHAR(255)"))
     except:
         pass
-
->>>>>>> c0b915eff67d0cf145739fbd2c968b9cc66371d3
     db.session.commit()
 
 
@@ -1216,8 +1204,6 @@ def start_exam():
     print(f"Created attempt {attempt.id} for user {uid} at {attempt.started_at}")
     return redirect(f"/exam/{attempt.id}")
 
-<<<<<<< HEAD
-=======
 @app.route("/exam/start/<token>")
 def exam_start_with_token(token):
     from datetime import datetime
@@ -1241,8 +1227,6 @@ def exam_start_with_token(token):
     session["exam_id"] = exam.id
     return redirect(url_for("exam_rules"))
 
-
->>>>>>> c0b915eff67d0cf145739fbd2c968b9cc66371d3
 @app.route("/exam/<int:attempt_id>")
 @login_required
 def exam_page(attempt_id):
@@ -1650,10 +1634,7 @@ def admin_dashboard():
         is_super=is_super,
         admin_accounts=admin_accounts,
         schedule=ExamSchedule.query.first(),
-<<<<<<< HEAD
-=======
         latest_exam=ExamSchedule.query.order_by(ExamSchedule.start_time.desc()).first(),
->>>>>>> c0b915eff67d0cf145739fbd2c968b9cc66371d3
         current_time=datetime.now(),
     )
 
@@ -1938,20 +1919,12 @@ def set_exam_time():
     old_schedule = ExamSchedule.query.first()
     if old_schedule:
         db.session.delete(old_schedule)
-
-<<<<<<< HEAD
-    new_exam = ExamSchedule(
-        start_time=start_time,
-        end_time=end_time
-=======
-    # Generate unique secure token
     exam_token = str(uuid.uuid4())
     
     new_exam = ExamSchedule(
         start_time=start_time,
         end_time=end_time,
         exam_token=exam_token
->>>>>>> c0b915eff67d0cf145739fbd2c968b9cc66371d3
     )
 
     db.session.add(new_exam)
@@ -2717,13 +2690,11 @@ with app.app_context():
 with app.app_context():
     try:
         from sqlalchemy import text
-<<<<<<< HEAD
         db.session.execute(text("ALTER TABLE blocked_roll ADD COLUMN username TEXT"))
         db.session.commit()
         print("username column added successfully")
     except Exception as e:
         print("Column may already exist:", e)
-=======
         # Check if username column already exists in blocked_roll table
         result = db.session.execute(text("PRAGMA table_info(blocked_roll)")).fetchall()
         columns = [row[1] for row in result if row[0] == 'column']
@@ -2737,7 +2708,6 @@ with app.app_context():
             print("username column already exists in blocked_roll table")
     except Exception as e:
         print("Error checking/adding column:", e)
->>>>>>> c0b915eff67d0cf145739fbd2c968b9cc66371d3
 
 # TEMPORARY: Update missing roll numbers for existing students
 # RUN ONCE, THEN REMOVE THIS CODE
