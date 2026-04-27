@@ -164,6 +164,8 @@ class ExamSchedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
+    exam_token = db.Column(db.String(255), unique=True)
+
 
 class ExamHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
