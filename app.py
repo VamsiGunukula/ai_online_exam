@@ -956,6 +956,52 @@ def exam_rules():
     now = datetime.utcnow().replace(tzinfo=None)
     return render_template('exam_rules.html', exams=exams, now=now)
 
+@app.route('/start_exam', methods=['POST'])
+@login_required
+def start_exam():
+    # Check if user has access to start exam
+    user = User.query.get(session['user_id'])
+    if not user.exam_access_enabled:
+        flash("Exam access is disabled", "error")
+        return redirect(url_for('dashboard'))
+    
+    # Check if user already has an in-progress attempt
+    existing_attempt = Attempt.query.filter_by(
+        user_id=user.id,
+        status='in_progress'
+    ).first()
+    
+    if existing_attempt:
+        return redirect(url_for('exam', attempt_id=existing_attempt.id))
+    
+    # Check if user already completed and no reattempt allowed
+    completed_attempt = Attempt.query.filter_by(
+        user_id=user.id,
+        status='completed'
+    ).first()
+    
+    if completed_attempt and not user.allow_reattempt:
+        flash("You have already completed the exam", "error")
+        return redirect(url_for('dashboard'))
+    
+    # Get running exam
+    running_exam = get_running_exam()
+    if not running_exam:
+        flash("No exam is currently running", "error")
+        return redirect(url_for('dashboard'))
+    
+    # Create new attempt
+    attempt = Attempt(
+        user_id=user.id,
+        exam_id=running_exam.id,
+        status='in_progress',
+        started_at=datetime.utcnow()
+    )
+    db.session.add(attempt)
+    db.session.commit()
+    
+    return redirect(url_for('exam', attempt_id=attempt.id))
+
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
