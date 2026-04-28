@@ -24,7 +24,7 @@
     <div>
       <label style="display: block; margin-bottom: 4px; font-weight: 600;">Start Time</label>
       <input type="datetime-local" name="start_time" class="form-control exam-input"
-       min="{{ now.strftime('%Y-%m-%dT%H:%M') }}"
+       min="{{ now }}"
        max="2099-12-31T23:59"
        required>
     </div>
@@ -32,7 +32,7 @@
     <div>
       <label style="display: block; margin-bottom: 4px; font-weight: 600;">End Time</label>
       <input type="datetime-local" name="end_time" class="form-control exam-input"
-       min="{{ now.strftime('%Y-%m-%dT%H:%M') }}"
+       min="{{ now }}"
        max="2099-12-31T23:59"
        required>
     </div>
