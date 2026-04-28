@@ -1040,7 +1040,11 @@ def exam(attempt_id):
         flash("Exam time has expired", "error")
         return redirect(url_for('dashboard'))
     
-    return render_template('exam.html', attempt=attempt)
+    return render_template(
+        'exam.html',
+        attempt=attempt,
+        attempt_id=attempt.id
+    )
 
 @app.route("/admin")
 @admin_required
