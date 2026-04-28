@@ -1654,13 +1654,39 @@ def dashboard():
     # Get latest attempt
     latest_attempt = attempts[0] if attempts else None
     
+    # Add exam schedule and time variables
+    schedule = ExamSchedule.query.first()
+    current_time = datetime.utcnow() + timedelta(hours=5, minutes=30)
+    
+    user = User.query.get(session['user_id'])
+    
+    can_start_exam = True
+    is_currently_completed = False
+    
+    if not user.exam_access_enabled:
+        can_start_exam = False
+    
+    # Check if user already completed exam
+    completed_attempt = Attempt.query.filter_by(
+        user_id=user.id,
+        status='completed'
+    ).first()
+    
+    if completed_attempt and not user.allow_reattempt:
+        can_start_exam = False
+        is_currently_completed = True
+    
     return render_template('dashboard.html', 
                       attempts=attempts,
                       total_attempts=total_attempts,
                       completed_attempts=completed_count,
                       avg_score=avg_score,
                       latest_attempt=latest_attempt,
-                      pass_threshold=PASS_SCORE_THRESHOLD)
+                      pass_threshold=PASS_SCORE_THRESHOLD,
+                      schedule=schedule,
+                      current_time=current_time,
+                      can_start_exam=can_start_exam,
+                      is_currently_completed=is_currently_completed)
 
 
 def _increment_global_warning(attempt):
