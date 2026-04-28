@@ -123,26 +123,9 @@
         .enter-btn:active {
             transform: translateY(0);
         }
-
-        .top-logo {
-            position: absolute;
-            top: 30px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        .top-logo img {
-            width: 110px;
-            height: 110px;
-            object-fit: contain;
-        }
     </style>
 </head>
 <body>
-    <div class="top-logo">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="College Logo">
-    </div>
     <div class="welcome-card">
         <img src="{{ url_for('static', filename='images/logo.png') }}" alt="College Logo" class="logo" onerror="this.style.display='none'">
         
