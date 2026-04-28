@@ -1716,73 +1716,34 @@ def exam_report(attempt_id):
     
     # Get user info
     user = User.query.get(attempt.user_id)
-    
+
     # Build report data
-    report_data = build_report_data(attempt) if attempt.status == 'completed' else None
-    
-    return render_template('report.html', 
-                      attempt=attempt, 
-                      user=user, 
-                      report_data=report_data)
+    report_data = build_report_data(attempt) if attempt.status == 'completed' else {}
 
+    # Extract values safely
+    weak_topics = report_data.get("weak_topics", [])
+    strong_topics = report_data.get("strong_topics", [])
+    suggestions = report_data.get("suggestions", [])
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    # Get user's exam attempts
-    attempts = Attempt.query.filter_by(user_id=session['user_id']).order_by(Attempt.started_at.desc()).all()
-    
-    # Calculate statistics
-    completed_attempts = [a for a in attempts if a.status == 'completed']
-    total_attempts = len(attempts)
-    completed_count = len(completed_attempts)
-    
-    # Calculate average score
-    scores = [a.score for a in completed_attempts if a.score is not None]
-    avg_score = round(sum(scores) / len(scores), 2) if scores else 0
-    
-    # Get latest attempt
-    latest_attempt = attempts[0] if attempts else None
-    
-    # Add exam schedule and time variables
-    schedule = ExamSchedule.query.first()
-    current_time = datetime.utcnow() + timedelta(hours=5, minutes=30)
-    
-    user = User.query.get(session['user_id'])
-    
-    can_start_exam = True
-    is_currently_completed = False
-    
-    if not user.exam_access_enabled:
-        can_start_exam = False
-    
-    # Check if user already completed exam
-    completed_attempt = Attempt.query.filter_by(
-        user_id=user.id,
-        status='completed'
-    ).first()
-    
-    if completed_attempt and not user.allow_reattempt:
-        can_start_exam = False
-        is_currently_completed = True
-    
-    return render_template('dashboard.html', 
-                      attempts=attempts,
-                      total_attempts=total_attempts,
-                      completed_attempts=completed_count,
-                      avg_score=avg_score,
-                      latest_attempt=latest_attempt,
-                      pass_threshold=PASS_SCORE_THRESHOLD,
-                      schedule=schedule,
-                      current_time=current_time,
-                      can_start_exam=can_start_exam,
-                      is_currently_completed=is_currently_completed)
+    warnings = parse_warning_details(attempt)
 
+    correct_answers = int((attempt.score or 0) / 10)  # adjust if needed
+    total_questions = len(json.loads(attempt.question_ids_json))
 
-def _increment_global_warning(attempt):
-    """Single counter for tab, face, and voice events."""
-    attempt.warning_count = min(MAX_WARNINGS, (attempt.warning_count or 0) + 1)
-
+    # ✅ FIX: pass student = user
+    return render_template(
+        'report.html',
+        attempt=attempt,
+        student=user,   # ⭐ CRITICAL FIX
+        score=attempt.score or 0,
+        correct_answers=correct_answers,
+        total_questions=total_questions,
+        warnings=warnings,
+        weak_topics=weak_topics,
+        strong_topics=strong_topics,
+        suggestions=suggestions,
+        learning_resources=LEARNING_RESOURCES
+    )
 
 @app.route("/api/exam/<int:attempt_id>/telemetry", methods=["POST"])
 @login_required
