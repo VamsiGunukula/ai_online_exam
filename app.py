@@ -1610,6 +1610,32 @@ def history_page():
     return render_template('history.html', attempts=attempts)
 
 
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    # Get user's exam attempts
+    attempts = Attempt.query.filter_by(user_id=session['user_id']).order_by(Attempt.started_at.desc()).all()
+    
+    # Calculate statistics
+    completed_attempts = [a for a in attempts if a.status == 'completed']
+    total_attempts = len(attempts)
+    completed_count = len(completed_attempts)
+    
+    # Calculate average score
+    scores = [a.score for a in completed_attempts if a.score is not None]
+    avg_score = round(sum(scores) / len(scores), 2) if scores else 0
+    
+    # Get latest attempt
+    latest_attempt = attempts[0] if attempts else None
+    
+    return render_template('dashboard.html', 
+                      attempts=attempts,
+                      total_attempts=total_attempts,
+                      completed_attempts=completed_count,
+                      avg_score=avg_score,
+                      latest_attempt=latest_attempt)
+
+
 def _increment_global_warning(attempt):
     """Single counter for tab, face, and voice events."""
     attempt.warning_count = min(MAX_WARNINGS, (attempt.warning_count or 0) + 1)
