@@ -1473,7 +1473,6 @@ def all_students():
     students = User.query.filter_by(is_admin=False).all()
     return render_template("admin/all_students.html", students=students)
 
-
 @app.route('/admin/student/<id>')
 @admin_required
 def admin_student_detail(id):
@@ -1486,6 +1485,22 @@ def admin_student_detail(id):
     
     return render_template('admin/student_detail.html', student=student)
 
+@app.route('/admin/toggle_exam_access/<int:user_id>', methods=['POST'])
+@admin_required
+def admin_toggle_exam_access(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        flash("Student not found", "error")
+        return redirect(url_for('admin_dashboard'))
+    
+    # Toggle exam access
+    user.exam_access_enabled = not user.exam_access_enabled
+    db.session.commit()
+    
+    status = "enabled" if user.exam_access_enabled else "disabled"
+    flash(f"Exam access {status} for {user.username}", "success")
+    
+    return redirect(url_for('admin_dashboard'))
 
 def _increment_global_warning(attempt):
     """Single counter for tab, face, and voice events."""
