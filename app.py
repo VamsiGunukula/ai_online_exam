@@ -1610,6 +1610,32 @@ def history_page():
     return render_template('history.html', attempts=attempts)
 
 
+@app.route('/exam-report/<int:attempt_id>')
+@login_required
+def exam_report(attempt_id):
+    # Get the attempt
+    attempt = Attempt.query.get(attempt_id)
+    if not attempt:
+        flash("Report not found", "error")
+        return redirect(url_for('dashboard'))
+    
+    # Verify user owns this attempt
+    if attempt.user_id != session['user_id']:
+        flash("Access denied", "error")
+        return redirect(url_for('dashboard'))
+    
+    # Get user info
+    user = User.query.get(attempt.user_id)
+    
+    # Build report data
+    report_data = build_report_data(attempt) if attempt.status == 'completed' else None
+    
+    return render_template('report.html', 
+                      attempt=attempt, 
+                      user=user, 
+                      report_data=report_data)
+
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
