@@ -1502,6 +1502,108 @@ def admin_toggle_exam_access(user_id):
     
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/admin/grant_reattempt/<int:user_id>', methods=['POST'])
+@admin_required
+def admin_grant_reattempt(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        flash("Student not found", "error")
+        return redirect(url_for('admin_dashboard'))
+    
+    # Grant reattempt permission
+    user.allow_reattempt = True
+    user.exam_completed = False
+    user.exam_access_enabled = True
+    db.session.commit()
+    
+    flash(f"Reattempt granted for {user.username}", "success")
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/delete_admin_user/<int:admin_id>', methods=['POST'])
+@admin_required
+def admin_delete_admin_user(admin_id):
+    admin = User.query.get(admin_id)
+    if not admin:
+        flash("Admin not found", "error")
+        return redirect(url_for('admin_dashboard'))
+    
+    # Don't allow deleting super admin or yourself
+    current_user = db.session.get(User, session["user_id"])
+    if admin.id == current_user.id:
+        flash("Cannot delete your own admin account", "error")
+        return redirect(url_for('admin_dashboard'))
+    
+    if getattr(admin, 'admin_role', None) == 'super_admin':
+        flash("Cannot delete super admin account", "error")
+        return redirect(url_for('admin_dashboard'))
+    
+    # Delete the admin
+    db.session.delete(admin)
+    db.session.commit()
+    
+    flash(f"Admin {admin.username} removed successfully", "success")
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/create_admin', methods=['POST'])
+@admin_required
+def admin_create_admin():
+    username = request.form.get('username', '').strip()
+    email = request.form.get('email', '').strip().lower()
+    password = request.form.get('password', '')
+    
+    if not username or not email or not password:
+        flash("All fields are required", "error")
+        return redirect(url_for('admin_dashboard'))
+    
+    # Check if user already exists
+    if User.query.filter_by(username=username).first():
+        flash("Username already exists", "error")
+        return redirect(url_for('admin_dashboard'))
+    
+    if User.query.filter_by(email=email).first():
+        flash("Email already registered", "error")
+        return redirect(url_for('admin_dashboard'))
+    
+    # Create new admin user
+    admin = User(
+        username=username,
+        email=email,
+        password_hash=generate_password_hash(password),
+        is_admin=True,
+        allow_reattempt=True,
+        exam_completed=False,
+        exam_access_enabled=True,
+        admin_role="admin"
+    )
+    
+    db.session.add(admin)
+    db.session.commit()
+    
+    flash(f"Admin {username} created successfully", "success")
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/exams')
+@login_required
+def exam_list_page():
+    attempts = Attempt.query.filter_by(user_id=session['user_id']).order_by(Attempt.started_at.desc()).all()
+    return render_template('exams.html', attempts=attempts)
+
+
+@app.route('/scores')
+@login_required
+def score_page():
+    attempts = Attempt.query.filter_by(user_id=session['user_id'], status='completed').order_by(Attempt.started_at.desc()).all()
+    return render_template('scores.html', attempts=attempts)
+
+
+@app.route('/history')
+@login_required
+def history_page():
+    attempts = Attempt.query.filter_by(user_id=session['user_id']).order_by(Attempt.started_at.desc()).all()
+    return render_template('history.html', attempts=attempts)
+
+
 def _increment_global_warning(attempt):
     """Single counter for tab, face, and voice events."""
     attempt.warning_count = min(MAX_WARNINGS, (attempt.warning_count or 0) + 1)
