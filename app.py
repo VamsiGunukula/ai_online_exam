@@ -1659,7 +1659,8 @@ def dashboard():
                       total_attempts=total_attempts,
                       completed_attempts=completed_count,
                       avg_score=avg_score,
-                      latest_attempt=latest_attempt)
+                      latest_attempt=latest_attempt,
+                      pass_threshold=PASS_SCORE_THRESHOLD)
 
 
 def _increment_global_warning(attempt):
