@@ -11,7 +11,7 @@
      data-submit-url="{{ url_for('api_submit', attempt_id=attempt_id) }}"
      data-profile-url="{{ url_for('api_exam_profile', attempt_id=attempt_id) }}"
      data-telemetry-url="{{ url_for('api_telemetry', attempt_id=attempt_id) }}"
-     data-auto-submit-url="{{ url_for('auto_submit_exam') }}"
+     data-auto-submit-url="{{ url_for('api_submit', attempt_id=attempt_id) }}"
      data-student-name="{{ student_name }}"
      data-student-email="{{ student_email }}"
      data-dashboard-url="{{ url_for('dashboard') }}">
