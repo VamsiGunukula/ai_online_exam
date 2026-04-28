@@ -7,7 +7,8 @@ def get_running_exam():
     """Get the currently running exam based on time window"""
     try:
         # Use naive datetime to match database storage format
-        now = datetime.now()
+        from datetime import datetime, timedelta
+        now = datetime.utcnow() + timedelta(hours=5, minutes=30)
         
         # Get all exams and check each one manually
         all_exams = ExamHistory.query.all()
@@ -960,7 +961,8 @@ def exam_rules():
         return redirect(url_for("dashboard"))
     
     exams = ExamHistory.query.order_by(ExamHistory.start_time.desc()).all()
-    now = datetime.now()
+    from datetime import datetime, timedelta
+    now = datetime.utcnow() + timedelta(hours=5, minutes=30)
     return render_template('exam_rules.html', exams=exams, now=now)
 
 
@@ -1003,11 +1005,10 @@ def dashboard():
     )
     latest_completed = next((a for a in attempts if a.status == "completed"), None)
     latest_pass = is_passing_score(latest_completed.score) if latest_completed else None
-    from datetime import datetime
+    from datetime import datetime, timedelta
     
     # Get schedule with proper datetime comparison
-    from datetime import datetime
-    now = datetime.now().replace(tzinfo=None)
+    now = (datetime.utcnow() + timedelta(hours=5, minutes=30)).replace(tzinfo=None)
     
     # Force proper datetime comparison
     schedule = ExamSchedule.query.filter(
@@ -1199,7 +1200,7 @@ def exam_start_with_token(token):
         return render_template("error.html", message="Invalid exam link")
     
     # Time validation
-    now = datetime.now()
+    now = datetime.utcnow() + timedelta(hours=5, minutes=30)
     
     if now < exam.start_time:
         return render_template("error.html", message="Exam not started yet")
@@ -1619,7 +1620,7 @@ def admin_dashboard():
         admin_accounts=admin_accounts,
         schedule=ExamSchedule.query.first(),
         latest_exam=ExamSchedule.query.order_by(ExamSchedule.start_time.desc()).first(),
-        current_time=datetime.now(),
+        current_time=datetime.utcnow() + timedelta(hours=5, minutes=30),
     )
 
 
@@ -1845,18 +1846,7 @@ def make_super_admin(user_id):
 @admin_required
 def create_exam_page():
     if request.method == 'POST':
-        # reuse existing schedule exam logic
-        return set_exam_time()  
-
-    from datetime import datetime
-    return render_template('create_exam.html', 
-        schedule=ExamSchedule.query.first(),
-        now=datetime.now()
-    )
-
-@app.route("/set-exam-time", methods=["POST"])
-def set_exam_time():
-    from datetime import datetime
+        return admin_create_admin()
     
     # Ensure user logged in and is admin
     if "user_id" not in session:
@@ -1869,8 +1859,8 @@ def set_exam_time():
     start_time = datetime.fromisoformat(request.form["start_time"])
     end_time = datetime.fromisoformat(request.form["end_time"])
 
-    from datetime import datetime
-    now = datetime.now()
+    from datetime import datetime, timedelta
+    now = datetime.utcnow() + timedelta(hours=5, minutes=30)
 
     # Check if start time is in past
     if start_time <= now:
@@ -1953,8 +1943,8 @@ def exam_history():
         current_exam.total_students = student_count
     
     # Add student count and status to each exam
-    from datetime import datetime
-    now = datetime.now()
+    from datetime import datetime, timedelta
+    now = datetime.utcnow() + timedelta(hours=5, minutes=30)
     
     for exam in exams:
         # Count attempts for this exam time period
@@ -1973,8 +1963,8 @@ def exam_history():
         else:
             exam.status = "NOT STARTED"
     
-    from datetime import datetime
-    return render_template('exam_history.html', exams=exams, now=datetime.now())
+    from datetime import datetime, timedelta
+    return render_template('exam_history.html', exams=exams, now=datetime.utcnow() + timedelta(hours=5, minutes=30))
 
 @app.route('/admin/exam/delete/<int:exam_id>', methods=['POST'])
 @admin_required
