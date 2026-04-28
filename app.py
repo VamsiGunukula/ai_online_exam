@@ -990,17 +990,57 @@ def start_exam():
         flash("No exam is currently running", "error")
         return redirect(url_for('dashboard'))
     
+    # Get random questions
+    import json
+    questions = Question.query.order_by(db.func.random()).limit(10).all()
+    
+    # Extract question IDs
+    question_ids = [q.id for q in questions]
+    
+    # Convert to JSON
+    question_ids_json = json.dumps(question_ids)
+    
     # Create new attempt
     attempt = Attempt(
         user_id=user.id,
         exam_id=running_exam.id,
+        question_ids_json=question_ids_json,
+        current_index=0,
         status='in_progress',
+        time_limit_seconds=1800,
         started_at=datetime.utcnow()
     )
     db.session.add(attempt)
     db.session.commit()
     
     return redirect(url_for('exam', attempt_id=attempt.id))
+
+@app.route('/exam/<int:attempt_id>')
+@login_required
+def exam(attempt_id):
+    # Get the attempt
+    attempt = Attempt.query.get(attempt_id)
+    if not attempt:
+        flash("Exam not found", "error")
+        return redirect(url_for('dashboard'))
+    
+    # Verify user owns this attempt
+    if attempt.user_id != session['user_id']:
+        flash("Access denied", "error")
+        return redirect(url_for('dashboard'))
+    
+    # Check if attempt is in progress
+    if attempt.status != 'in_progress':
+        flash("Exam is not in progress", "error")
+        return redirect(url_for('dashboard'))
+    
+    # Check if time has expired
+    if remaining_seconds(attempt) <= 0:
+        finalize_attempt(attempt)
+        flash("Exam time has expired", "error")
+        return redirect(url_for('dashboard'))
+    
+    return render_template('exam.html', attempt=attempt)
 
 @app.route("/admin")
 @admin_required
