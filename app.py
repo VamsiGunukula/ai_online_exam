@@ -1124,6 +1124,9 @@ def create_exam_page():
 
         return redirect(url_for("admin_dashboard"))
 
+    # For GET request, always return the create exam page
+    return render_template('create_exam.html')
+
 @app.route('/admin/exam-history')
 @admin_required
 def exam_history():
