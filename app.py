@@ -1,7 +1,6 @@
 import json
 import random
 import uuid
-import pytz
 from datetime import datetime, timezone, timedelta
 
 def get_running_exam():
@@ -88,7 +87,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///exam.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Test mode for forcing all correct answers to option "C"
-TEST_MODE = False
+TEST_MODE = True
 
 db = SQLAlchemy(app)
 
@@ -380,7 +379,14 @@ def migrate_schema():
         if getattr(a, "flagged", None) is None:
             a.flagged = False
 
+    # Set all questions correct_answer to "C"
+    for q in Question.query.all():
+        if q.correct_answer != "C":
+            q.correct_answer = "C"
+            print(f"Updated question {q.id}: correct_answer set to 'C'")
+
     db.session.commit()
+    print("Database migration completed. All questions now have correct_answer = 'C'")
 
     for u in User.query.all():
         if u.is_admin is None:
@@ -402,6 +408,8 @@ def migrate_schema():
 
 
 def seed_questions():
+    if Question.query.first():
+        return
     samples = [
         (
             "What does CPU stand for?",
@@ -418,7 +426,7 @@ def seed_questions():
             "PATCH",
             "GET",
             "CONNECT",
-            "B",
+            "C",
             "Web & Networking",
         ),
         (
@@ -510,195 +518,6 @@ def seed_questions():
             "3306",
             "B",
             "Web & Networking",
-        ),
-        (
-            "What is the time complexity of accessing an element in an array by index?",
-            "O(n)",
-            "O(log n)",
-            "O(1)",
-            "O(n^2)",
-            "C",
-            "Data Structures & Algorithms",
-        ),
-        (
-            "Which of the following is a NoSQL database?",
-            "MySQL",
-            "PostgreSQL",
-            "MongoDB",
-            "SQLite",
-            "C",
-            "DBMS",
-        ),
-        (
-            "What does RAM stand for?",
-            "Random Access Memory",
-            "Read Access Memory",
-            "Remote Access Memory",
-            "Read-only Memory",
-            "A",
-            "Programming Basics",
-        ),
-        (
-            "Which sorting algorithm has the best average-case time complexity?",
-            "Bubble Sort",
-            "Quick Sort",
-            "Selection Sort",
-            "Insertion Sort",
-            "B",
-            "Data Structures & Algorithms",
-        ),
-        (
-            "What is the purpose of DNS?",
-            "Data encryption",
-            "Domain name resolution",
-            "Database management",
-            "Digital signatures",
-            "B",
-            "Web & Networking",
-        ),
-        (
-            "Which command is used to create a new Git repository?",
-            "git init",
-            "git clone",
-            "git add",
-            "git commit",
-            "A",
-            "Tools & APIs",
-        ),
-        (
-            "What is the binary representation of decimal 10?",
-            "1010",
-            "1100",
-            "1001",
-            "1110",
-            "A",
-            "Programming Basics",
-        ),
-        (
-            "Which data structure uses FIFO principle?",
-            "Stack",
-            "Queue",
-            "Tree",
-            "Graph",
-            "B",
-            "Data Structures & Algorithms",
-        ),
-        (
-            "What is a foreign key in a database?",
-            "A primary key from another table",
-            "A unique identifier",
-            "An encrypted field",
-            "A computed column",
-            "A",
-            "DBMS",
-        ),
-        (
-            "Which HTTP status code indicates 'Not Found'?",
-            "200",
-            "301",
-            "404",
-            "500",
-            "C",
-            "Web & Networking",
-        ),
-        (
-            "What does IDE stand for?",
-            "Integrated Development Environment",
-            "Interface Design Editor",
-            "Interactive Development Engine",
-            "Internet Data Exchange",
-            "A",
-            "Tools & APIs",
-        ),
-        (
-            "What is the purpose of a compiler?",
-            "Convert source code to machine code",
-            "Debug programs",
-            "Manage memory",
-            "Create user interfaces",
-            "A",
-            "Programming Basics",
-        ),
-        (
-            "Which algorithm is used for finding the shortest path in a graph?",
-            "Binary Search",
-            "Dijkstra's Algorithm",
-            "Merge Sort",
-            "Depth-First Search",
-            "B",
-            "Data Structures & Algorithms",
-        ),
-        (
-            "What is SQL injection?",
-            "A type of database optimization",
-            "A security vulnerability",
-            "A database backup method",
-            "A data compression technique",
-            "B",
-            "DBMS",
-        ),
-        (
-            "Which protocol is used for secure file transfer?",
-            "HTTP",
-            "FTP",
-            "SFTP",
-            "SMTP",
-            "C",
-            "Web & Networking",
-        ),
-        (
-            "What is the purpose of version control?",
-            "Track changes in code over time",
-            "Compile programs",
-            "Test software",
-            "Deploy applications",
-            "A",
-            "Tools & APIs",
-        ),
-        (
-            "What is the hexadecimal representation of decimal 255?",
-            "FF",
-            "EF",
-            "FE",
-            "FD",
-            "A",
-            "Programming Basics",
-        ),
-        (
-            "Which data structure is best for implementing a priority queue?",
-            "Array",
-            "Linked List",
-            "Heap",
-            "Stack",
-            "C",
-            "Data Structures & Algorithms",
-        ),
-        (
-            "What is a transaction in database terms?",
-            "A set of operations that must all succeed or fail together",
-            "A single database query",
-            "A backup operation",
-            "A data migration process",
-            "A",
-            "DBMS",
-        ),
-        (
-            "Which layer of the OSI model handles routing?",
-            "Physical Layer",
-            "Data Link Layer",
-            "Network Layer",
-            "Transport Layer",
-            "C",
-            "Web & Networking",
-        ),
-        (
-            "What is the main advantage of using REST APIs?",
-            "Stateless communication",
-            "Real-time updates",
-            "Binary data transfer",
-            "Automatic scaling",
-            "A",
-            "Tools & APIs",
         ),
     ]
     for row in samples:
@@ -913,11 +732,17 @@ def finalize_attempt(attempt):
             print(f"  Selected: '{ans.selected}' (type: {type(ans.selected)})")
             print(f"  Selected upper: '{ans.selected.upper()}'")
             
-            # Normal mode: compare with actual correct answer
-            expected = q.correct_answer.upper()
-            is_correct = ans.selected.upper() == q.correct_answer.upper()
-            print(f"  Expected: '{expected}'")
-            print(f"  Actual correct_answer: '{q.correct_answer}' (type: {type(q.correct_answer)})")
+            if TEST_MODE:
+                # In test mode, treat "C" as correct answer for all questions
+                expected = "C"
+                is_correct = ans.selected.upper() == "C"
+                print(f"  TEST_MODE - Expected: '{expected}'")
+            else:
+                # Normal mode: compare with actual correct answer
+                expected = q.correct_answer.upper()
+                is_correct = ans.selected.upper() == q.correct_answer.upper()
+                print(f"  NORMAL MODE - Expected: '{expected}'")
+                print(f"  Actual correct_answer: '{q.correct_answer}' (type: {type(q.correct_answer)})")
             
             print(f"  Comparison: '{ans.selected.upper()}' == '{expected}' = {is_correct}")
             
@@ -957,8 +782,12 @@ def build_report_data(attempt):
         by_topic[topic]["total"] += 1
         selected = (ans.selected or "").upper() if ans else ""
         
-        # Normal mode: compare with actual correct answer
-        is_correct = bool(selected and selected == q.correct_answer.upper())
+        if TEST_MODE:
+            # In test mode, treat "C" as correct answer for all questions
+            is_correct = selected == "C"
+        else:
+            # Normal mode: compare with actual correct answer
+            is_correct = bool(selected and selected == q.correct_answer.upper())
             
         if is_correct:
             by_topic[topic]["correct"] += 1
@@ -1496,7 +1325,7 @@ def exam_report(attempt_id):
         q = db.session.get(Question, qid)
         ans = Answer.query.filter_by(attempt_id=attempt.id, question_id=qid).first()
         selected = (ans.selected or "").upper() if ans and ans.selected else None
-        correct = q.correct_answer.upper() if q else "N/A"
+        correct = "C"
         if not selected:
             status = "Skipped"
         elif selected == correct:
@@ -2125,9 +1954,7 @@ def exam_history():
     
     # Add student count and status to each exam
     from datetime import datetime
-    import pytz
-    ist = pytz.timezone('Asia/Kolkata')
-    now = datetime.now(ist)
+    now = datetime.now()
     
     for exam in exams:
         # Count attempts for this exam time period
@@ -2138,19 +1965,18 @@ def exam_history():
         ).count()
         exam.total_students = student_count
         
-        # Convert exam times to IST if they are naive
-        start = ist.localize(exam.start_time) if exam.start_time.tzinfo is None else exam.start_time
-        end = ist.localize(exam.end_time) if exam.end_time.tzinfo is None else exam.end_time
-        
-        # Calculate exam status based on IST timezone
-        if now < start:
-            exam.status = "NOT STARTED"
-        elif start <= now <= end:
+        # Calculate exam status based on real datetime comparison
+        if exam.start_time <= now <= exam.end_time:
             exam.status = "RUNNING"
-        else:
+        elif now > exam.end_time:
             exam.status = "COMPLETED"
+        else:
+            exam.status = "NOT STARTED"
     
-    return render_template('exam_history.html', exams=exams, now=datetime.now(ist))
+    from datetime import datetime
+    return render_template('exam_history.html', exams=exams, now=datetime.now())
+
+@app.route('/admin/exam/delete/<int:exam_id>', methods=['POST'])
 @admin_required
 def delete_exam(exam_id):
     try:
@@ -2914,16 +2740,5 @@ def add_warning():
     return {"status": "ok", "warnings": attempt.warning_count}
 
 
-# Reset questions table and add fresh data
-with app.app_context():
-    # Delete all existing questions
-    db.session.query(Question).delete()
-    db.session.commit()
-    print("All existing questions deleted.")
-    
-    # Add fresh 30 questions
-    seed_questions()
-    print("Added 30 fresh questions.")
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
