@@ -60,7 +60,7 @@
       {% if session.get('user_id') %}
       <nav class="top-nav">
         <span class="user-pill">{{ session.get('username') }}</span>
-        <a href="{{ url_for('admin_logout') if session.get('is_admin') else url_for('logout') }}" class="btn btn-ghost">Log out</a>
+        <a href="{{ url_for('admin_logout') }}" class="btn btn-ghost">Log out</a>
       </nav>
       {% endif %}
     </header>
