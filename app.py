@@ -7,7 +7,6 @@ def get_running_exam():
     """Get the currently running exam based on time window"""
     try:
         # Use naive datetime to match database storage format
-        from datetime import datetime, timedelta
         now = datetime.utcnow() + timedelta(hours=5, minutes=30)
         
         # Get all exams and check each one manually
@@ -930,19 +929,12 @@ def login():
             return redirect(url_for("dashboard"))
         flash("Invalid username or password.", "error")
     return render_template("login.html")
-
-
-@app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
-
 
 @app.route('/exam_rules')
 @login_required
 def exam_rules():
-    from datetime import datetime
-    
     # Safety check: ensure user has exam_id in session
     if "exam_id" not in session:
         # Try to auto-assign running exam
@@ -961,593 +953,8 @@ def exam_rules():
         return redirect(url_for("dashboard"))
     
     exams = ExamHistory.query.order_by(ExamHistory.start_time.desc()).all()
-    from datetime import datetime, timedelta
-    now = datetime.utcnow() + timedelta(hours=5, minutes=30)
+    now = datetime.utcnow().replace(tzinfo=None)
     return render_template('exam_rules.html', exams=exams, now=now)
-
-
-@app.route("/dashboard")
-@login_required
-def dashboard():
-    uid = session["user_id"]
-    user = db.session.get(User, uid)
-    if user and getattr(user, "is_admin", False):
-        return redirect(url_for("admin_dashboard"))
-    attempts = (
-        Attempt.query.filter_by(user_id=uid)
-        .order_by(Attempt.started_at.desc())
-        .limit(20)
-        .all()
-    )
-    completed = [a for a in attempts if a.status == "completed"]
-    total_exams = len(attempts)
-    completed_n = len(completed)
-    scores = [a.score for a in completed if a.score is not None]
-    avg_score = round(sum(scores) / len(scores), 1) if scores else None
-    has_completed_exam = completed_n > 0
-    exam_access = user and getattr(user, "exam_access_enabled", True)
-    
-    # Check if user already completed the currently running exam
-    running_exam = get_running_exam()
-    
-    existing_attempt = None
-    
-    if running_exam:
-        existing_attempt = Attempt.query.filter_by(
-            user_id=user.id,
-            exam_id=running_exam.id,
-            status="completed"
-        ).first()
-
-    can_start_exam = bool(
-        running_exam
-        and (not existing_attempt or user.allow_reattempt)
-    )
-    latest_completed = next((a for a in attempts if a.status == "completed"), None)
-    latest_pass = is_passing_score(latest_completed.score) if latest_completed else None
-    from datetime import datetime, timedelta
-    
-    # Get schedule with proper datetime comparison
-    now = (datetime.utcnow() + timedelta(hours=5, minutes=30)).replace(tzinfo=None)
-    
-    # Force proper datetime comparison
-    schedule = ExamSchedule.query.filter(
-        ExamSchedule.start_time <= now,
-        ExamSchedule.end_time >= now
-    ).order_by(ExamSchedule.start_time.asc()).first()
-    
-    # DEBUG PRINT (IMPORTANT)
-    print("NOW:", now)
-    print("START:", schedule.start_time if schedule else None)
-    print("END:", schedule.end_time if schedule else None)
-    
-    current_time = now
-    
-    return render_template(
-        "dashboard.html",
-        attempts=attempts,
-        questions_per_exam=QUESTIONS_PER_EXAM,
-        total_exams=total_exams,
-        completed_n=completed_n,
-        avg_score=avg_score,
-        has_completed_exam=has_completed_exam,
-        can_start_exam=can_start_exam,
-        pass_threshold=PASS_SCORE_THRESHOLD,
-        latest_pass=latest_pass,
-        exam_access=exam_access,
-        student=user,
-        schedule=schedule,
-        current_time=current_time,
-    )
-
-
-@app.route('/history')
-@login_required
-def history_page():
-    uid = session["user_id"]
-    user = db.session.get(User, uid)
-    attempts = (
-        Attempt.query.filter_by(user_id=uid)
-        .order_by(Attempt.started_at.desc())
-        .limit(20)
-        .all()
-    )
-    return render_template(
-        'history.html',
-        attempts=attempts,
-        pass_threshold=PASS_SCORE_THRESHOLD
-    )
-
-
-@app.route('/performance')
-@login_required
-def performance_page():
-    uid = session["user_id"]
-    user = db.session.get(User, uid)
-    attempts = (
-        Attempt.query.filter_by(user_id=uid)
-        .order_by(Attempt.started_at.desc())
-        .limit(20)
-        .all()
-    )
-    completed = [a for a in attempts if a.status == "completed"]
-    scores = [a.score for a in completed if a.score is not None]
-    avg_score = round(sum(scores) / len(scores), 1) if scores else None
-    return render_template(
-        'performance.html',
-        attempts=attempts,
-        avg_score=avg_score
-    )
-
-
-@app.route('/exams')
-@login_required
-def exam_list_page():
-    uid = session["user_id"]
-    user = db.session.get(User, uid)
-    attempts = (
-        Attempt.query.filter_by(user_id=uid)
-        .order_by(Attempt.started_at.desc())
-        .limit(20)
-        .all()
-    )
-    return render_template(
-        'exams.html',
-        attempts=attempts,
-        pass_threshold=PASS_SCORE_THRESHOLD
-    )
-
-
-@app.route('/scores')
-@login_required
-def score_page():
-    uid = session["user_id"]
-    user = db.session.get(User, uid)
-    attempts = (
-        Attempt.query.filter_by(user_id=uid)
-        .order_by(Attempt.started_at.desc())
-        .limit(20)
-        .all()
-    )
-    return render_template(
-        'scores.html',
-        attempts=attempts
-    )
-
-
-@app.route("/start_exam", methods=["POST"])
-@login_required
-def start_exam():
-    uid = session["user_id"]
-    user = db.session.get(User, uid)
-    if not user:
-        flash("Session invalid.", "error")
-        return redirect(url_for("login"))
-    
-    # SAFETY RESET ON START
-    if user.allow_reattempt:
-        user.exam_completed = False
-        user.exam_access_enabled = True
-        db.session.commit()
-    
-    # Check if user already completed this specific exam
-    existing_attempt = Attempt.query.filter_by(
-        user_id=user.id,
-        exam_id=session.get("exam_id"),
-        status="completed"
-    ).first()
-
-    if existing_attempt and not user.allow_reattempt:
-        flash("You already completed this exam.", "error")
-        return redirect(url_for("dashboard"))
-    
-    # Auto-assign currently running exam
-    running_exam = get_running_exam()
-    if not running_exam:
-        flash("No exam is running right now.", "error")
-        return redirect(url_for("dashboard"))
-    
-    # Store exam_id in session
-    session["exam_id"] = running_exam.id
-    print(f"Assigned exam_id {running_exam.id} to user {uid}")
-    
-    inprog = Attempt.query.filter_by(user_id=uid, status="in_progress").first()
-    if inprog:
-        return redirect(url_for("exam_page", attempt_id=inprog.id))
-    all_ids = [q.id for q in Question.query.all()]
-    if len(all_ids) < QUESTIONS_PER_EXAM:
-        flash("Not enough questions in the database.", "error")
-        return redirect(url_for("dashboard"))
-    last_done = (
-        Attempt.query.filter_by(user_id=uid, status="completed")
-        .order_by(Attempt.ended_at.desc())
-        .first()
-    )
-    exclude = set(parse_question_ids(last_done)) if last_done else set()
-    pool = [qid for qid in all_ids if qid not in exclude]
-    if len(pool) < QUESTIONS_PER_EXAM:
-        pool = list(all_ids)
-    chosen = random.sample(pool, QUESTIONS_PER_EXAM)
-    random.shuffle(chosen)
-    exam_id = session.get('exam_id')
-    print("Saving attempt for exam:", exam_id)
-    
-    attempt = Attempt(
-        user_id=uid,
-        exam_id=session.get("exam_id"),
-        started_at=datetime.now(timezone.utc),
-        question_ids_json=json.dumps(chosen),
-        current_index=0,
-        time_limit_seconds=EXAM_TIME_SECONDS,
-        status="in_progress",
-        tab_switch_count=0,
-        face_missing_warnings=0,
-        warning_count=0,
-    )
-    db.session.add(attempt)
-    db.session.commit()
-    print(f"Created attempt {attempt.id} for user {uid} at {attempt.started_at}")
-    return redirect(f"/exam/{attempt.id}")
-
-@app.route("/exam/start/<token>")
-def exam_start_with_token(token):
-    from datetime import datetime
-    
-    # Fetch exam using token
-    exam = ExamSchedule.query.filter_by(exam_token=token).first()
-    
-    if not exam:
-        return render_template("error.html", message="Invalid exam link")
-    
-    # Time validation
-    now = datetime.utcnow() + timedelta(hours=5, minutes=30)
-    
-    if now < exam.start_time:
-        return render_template("error.html", message="Exam not started yet")
-    
-    if now > exam.end_time:
-        return render_template("error.html", message="Exam expired")
-    
-    # Set exam_id in session and redirect to existing exam flow
-    session["exam_id"] = exam.id
-    return redirect(url_for("exam_rules"))
-
-@app.route("/exam/<int:attempt_id>")
-@login_required
-def exam_page(attempt_id):
-    uid = session["user_id"]
-    user = db.session.get(User, uid)
-
-    if not user:
-        return redirect(url_for("login"))
-
-    # Safety check: ensure exam_id is in session
-    if "exam_id" not in session:
-        flash("No exam assigned. Please start exam again.", "error")
-        return redirect(url_for("dashboard"))
-    
-    # Verify exam exists
-    exam = ExamHistory.query.get(session["exam_id"])
-    if not exam:
-        flash("Assigned exam not found.", "error")
-        session.pop("exam_id", None)
-        return redirect(url_for("dashboard"))
-
-    # Check if user already completed this specific exam
-    existing_attempt = Attempt.query.filter_by(
-        user_id=user.id,
-        exam_id=session.get("exam_id"),
-        status="completed"
-    ).first()
-
-    if existing_attempt and not user.allow_reattempt:
-        flash("You already completed this exam.", "error")
-        return redirect(url_for("dashboard"))
-
-    attempt = Attempt.query.filter_by(id=attempt_id, user_id=uid).first()
-
-    if not attempt:
-        flash("Exam not found.", "error")
-        return redirect(url_for("dashboard"))
-
-    if attempt.status != "in_progress":
-        return redirect(url_for("exam_report", attempt_id=attempt.id))
-
-    profile = parse_student_profile(attempt)
-    return render_template(
-        "exam.html",
-        attempt_id=attempt.id,
-        student_name=profile.get("name") or user.username,
-        student_email=profile.get("email") or user.email,
-    )
-
-
-@app.route("/report/<int:attempt_id>")
-@login_required
-def exam_report(attempt_id):
-    user = db.session.get(User, session["user_id"])
-
-    if user and user.is_admin:
-        # Admin can view any report
-        attempt = Attempt.query.get(attempt_id)
-    else:
-        # Student can view only their own report
-        attempt = get_attempt_for_user(attempt_id, session["user_id"])
-
-    if not attempt:
-        flash("Report not found.", "error")
-        return redirect(url_for("dashboard"))
-
-    if attempt.status != "completed":
-        flash("Exam is not finished yet.", "info")
-        return redirect(url_for("dashboard"))
-
-    qids = parse_question_ids(attempt)
-    total_questions = len(qids)
-
-    # CORRECT ANSWERS (FIXED)
-    correct_answers = 0
-    if qids:
-        for qid in qids:
-            ans = Answer.query.filter_by(attempt_id=attempt.id, question_id=qid).first()
-            if ans and ans.selected and ans.question:
-                if ans.selected.upper() == ans.question.correct_answer.upper():
-                    correct_answers += 1
-
-    # SCORE (DO NOT OVERRIDE LATER)
-    score = round((correct_answers / total_questions) * 100, 2) if total_questions else 0
-
-    warnings_list = parse_warning_details(attempt)
-    timeline = parse_timeline(attempt)
-    student_profile = parse_student_profile(attempt)
-    if not student_profile:
-        student_profile = {
-            "name": attempt.user.username if attempt.user else "Student",
-            "email": attempt.user.email if attempt.user else "",
-            "examId": attempt.id,
-            "date": to_ist(attempt.started_at).strftime("%Y-%m-%d %H:%M"),
-        }
-    
-    # SAFE VARIABLES
-    student_name = getattr(attempt.user, "name", "Student")
-    weak_topics = []
-    strong_topics = []
-    suggestions = []
-
-    # Get data from build_report_data if available
-    data = build_report_data(attempt)
-    if data:
-        weak_topics = data.get("weak_topics", [])
-        strong_topics = data.get("strong_topics", [])
-        suggestions = data.get("suggestions", [])
-
-    question_analysis = []
-    for idx, qid in enumerate(qids):
-        q = db.session.get(Question, qid)
-        ans = Answer.query.filter_by(attempt_id=attempt.id, question_id=qid).first()
-        selected = (ans.selected or "").upper() if ans and ans.selected else None
-        correct = "C"
-        if not selected:
-            status = "Skipped"
-        elif selected == correct:
-            status = "Correct"
-        else:
-            status = "Wrong"
-        question_analysis.append(
-            {
-                "qno": idx + 1,
-                "selected": selected,
-                "correct": correct,
-                "status": status,
-                "topic": q.topic if q else "General CS",
-            }
-        )
-
-    # STEP 6: PASS TO TEMPLATE
-    print("=== PDF DATA DEBUG ===")
-    print(f"Score: {score}")
-    print(f"Total questions: {total_questions}")
-    print(f"Correct answers: {correct_answers}")
-    print(f"Student profile: {student_profile}")
-    print(f"Strong topics count: {len(strong_topics) if strong_topics else 0}")
-    print(f"Weak topics count: {len(weak_topics) if weak_topics else 0}")
-    print(f"Suggestions count: {len(suggestions) if suggestions else 0}")
-    print(f"Question analysis count: {len(question_analysis) if question_analysis else 0}")
-    print("===================")
-    
-    resp = make_response(render_template(
-        "report.html",
-        attempt=attempt,
-        score=score,
-        total_questions=total_questions,
-        correct_answers=correct_answers,
-        warnings=warnings_list,
-        timeline=timeline,
-        student=student_profile,
-        strong_topics=strong_topics,
-        weak_topics=weak_topics,
-        suggestions=suggestions,
-        question_analysis=question_analysis,
-        learning_resources=LEARNING_RESOURCES,
-    ))
-
-    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
-    resp.headers["Pragma"] = "no-cache"
-
-    return resp
-
-
-@app.route("/report/<int:attempt_id>/pdf")
-@login_required
-def exam_report_pdf(attempt_id):
-    user = db.session.get(User, session["user_id"])
-
-    if user and user.is_admin:
-        attempt = Attempt.query.get(attempt_id)
-    else:
-        attempt = get_attempt_for_user(attempt_id, session["user_id"])
-
-    if not attempt or attempt.status != "completed":
-        return redirect(url_for("dashboard"))
-
-    qids = parse_question_ids(attempt)
-    total_questions = len(qids)
-
-    correct_answers = 0
-    for qid in qids:
-        ans = Answer.query.filter_by(attempt_id=attempt.id, question_id=qid).first()
-        if ans and ans.selected and ans.question:
-            if ans.selected.upper() == ans.question.correct_answer.upper():
-                correct_answers += 1
-
-    score = round((correct_answers / total_questions) * 100, 2) if total_questions else 0
-
-    data = build_report_data(attempt)
-
-    return render_template(
-        "pdf_report.html",
-        student_name=attempt.user.username,
-        email=attempt.user.email,
-        date=to_ist(attempt.started_at).strftime("%Y-%m-%d %H:%M"),
-        exam_id=attempt.id,
-
-        score=score,
-        status="PASS" if score >= 75 else "FAIL",
-
-        total=total_questions,
-        attempted=total_questions,
-        correct=correct_answers,
-        wrong=total_questions - correct_answers,
-        accuracy=score,
-
-        topics=[{"name": t["name"], "percent": t["accuracy"]} for t in data["topic_rows"]],
-
-        strong_topics=data["strong_topics"],
-        weak_topics=data["weak_topics"],
-
-        total_time="N/A",
-        avg_time="N/A",
-        tab_switches=attempt.tab_switch_count,
-        face_warnings=attempt.face_missing_warnings,
-        warnings=attempt.warning_count,
-
-        risk_level=attempt.cheating_risk or "Low",
-
-        recommendations=data["suggestions"],
-        learning_resources=LEARNING_RESOURCES
-    )
-
-
-@app.route("/report/<int:attempt_id>/pdf-clean")
-@login_required
-def exam_report_pdf_clean(attempt_id):
-    attempt = get_attempt_for_user(attempt_id, session["user_id"])
-
-    if not attempt or attempt.status != "completed":
-        return redirect(url_for("dashboard"))
-
-    qids = parse_question_ids(attempt)
-    total_questions = len(qids)
-
-    correct_answers = 0
-    attempted = 0
-    for qid in qids:
-        ans = Answer.query.filter_by(attempt_id=attempt.id, question_id=qid).first()
-        if ans and ans.selected and ans.question:
-            attempted += 1
-            if ans.selected.upper() == ans.question.correct_answer.upper():
-                correct_answers += 1
-
-    wrong = attempted - correct_answers
-    skipped = total_questions - attempted
-    score = round((correct_answers / total_questions) * 100, 2) if total_questions else 0
-
-    data = build_report_data(attempt)
-
-    # Generate HTML content
-    html_content = render_template(
-        "pdf_clean.html",
-        student_name=attempt.user.username,
-        email=attempt.user.email,
-        date=to_ist(attempt.started_at).strftime("%Y-%m-%d %H:%M"),
-        exam_id=attempt.id,
-
-        score=score,
-        status="PASS" if score >= 75 else "FAIL",
-
-        total=total_questions,
-        attempted=attempted,
-        correct=correct_answers,
-        wrong=wrong,
-        accuracy=score,
-
-        topics=[{"name": t["name"], "percent": t["accuracy"]} for t in data["topic_rows"]],
-
-        strong_topics=data["strong_topics"],
-        weak_topics=data["weak_topics"],
-
-        total_time=str(attempt.ended_at - attempt.started_at) if attempt.ended_at else "N/A",
-        avg_time=str((attempt.ended_at - attempt.started_at) / attempted if attempt.ended_at and attempted > 0 else "N/A"),
-        tab_switches=attempt.tab_switch_count,
-        face_warnings=attempt.face_missing_warnings,
-        voice_warnings=0,
-        warnings=attempt.warning_count,
-
-        risk_level=attempt.cheating_risk or "Low",
-
-        recommendations=data["suggestions"],
-        learning_resources=LEARNING_RESOURCES,
-        warning_logs=[
-            {
-                "type": "Tab Switch",
-                "question_no": 1
-            },
-            {
-                "type": "Face Not Detected", 
-                "question_no": 2
-            }
-        ]
-    )
-
-    # Return HTML as download
-    filename = f"exam_report_{attempt.user.username.replace(' ', '_')}.html"
-    
-    response = make_response(html_content)
-    response.headers['Content-Type'] = 'text/html'
-    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-    
-    return response
-
-
-@app.route("/auto-submit", methods=["POST"])
-@login_required
-def auto_submit_exam():
-    """Leave / blur / new tab: record proctoring warning, then always submit."""
-    data = request.get_json(silent=True) or {}
-    aid = data.get("attempt_id")
-    try:
-        aid = int(aid)
-    except (TypeError, ValueError):
-        return jsonify({"error": "bad_request"}), 400
-    uid = session["user_id"]
-    attempt = get_attempt_for_user(aid, uid)
-    if not attempt:
-        return jsonify({"error": "not_found"}), 404
-    if attempt.status != "in_progress":
-        return jsonify({"ok": True, "already_done": True})
-    attempt.tab_switch_count = min(100, (attempt.tab_switch_count or 0) + 1)
-    _increment_global_warning(attempt)
-    append_warning_detail(attempt, "Tab", "Window left during exam", 0)
-    db.session.commit()
-    finalize_attempt(attempt)
-    return jsonify(
-        {
-            "ok": True,
-            "score": attempt.score,
-            "report_url": report_url_for_attempt(attempt.id),
-        }
-    )
-
 
 @app.route("/admin")
 @admin_required
@@ -1605,7 +1012,6 @@ def admin_dashboard():
     admin_accounts = (
         User.query.filter_by(is_admin=True).order_by(User.username.asc()).all()
     )
-    from datetime import datetime
     
     return render_template(
         "admin/dashboard.html",
@@ -1622,7 +1028,6 @@ def admin_dashboard():
         latest_exam=ExamSchedule.query.order_by(ExamSchedule.start_time.desc()).first(),
         current_time=datetime.utcnow() + timedelta(hours=5, minutes=30),
     )
-
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login_page():
@@ -1647,278 +1052,77 @@ def admin_login_page():
         flash("Invalid admin credentials.", "error")
     return render_template("admin/login.html")
 
-
 @app.route("/admin/logout")
 def admin_logout():
     session.clear()
     return redirect(url_for("admin_login_page"))
 
-
-@app.route("/admin/students/<int:user_id>/reattempt", methods=["POST"])
-@admin_required
-@super_admin_required
-def admin_toggle_reattempt(user_id):
-    u = db.session.get(User, user_id)
-    if not u or u.is_admin:
-        flash("Invalid student.", "error")
-        return redirect(url_for("admin_dashboard"))
-    u.allow_reattempt = not u.allow_reattempt
-    if u.exam_completed:
-        u.exam_access_enabled = bool(u.allow_reattempt)
-    db.session.commit()
-    flash("Re-attempt setting updated for " + u.username + ".", "success")
-    return redirect(url_for("admin_dashboard"))
-
-
-@app.route("/admin/students/<int:user_id>/exam-access", methods=["POST"])
-@admin_required
-@super_admin_required
-def admin_toggle_exam_access(user_id):
-    u = db.session.get(User, user_id)
-    if not u or u.is_admin:
-        flash("Invalid student.", "error")
-        return redirect(url_for("admin_dashboard"))
-    u.exam_access_enabled = not bool(getattr(u, "exam_access_enabled", True))
-    db.session.commit()
-    flash("Exam access updated for " + u.username + ".", "success")
-    return redirect(url_for("admin_dashboard"))
-
-
-# DELETE SINGLE STUDENT COMPLETELY
-@app.route("/admin/students/<int:user_id>/delete", methods=["POST"])
-@admin_required
-@super_admin_required
-def admin_delete_student(user_id):
-    u = db.session.get(User, user_id)
-
-    if not u or u.is_admin:
-        flash("Invalid student.", "error")
-        return redirect(url_for("admin_dashboard"))
-
-    # Delete answers → attempts → user
-    for att in Attempt.query.filter_by(user_id=u.id).all():
-        Answer.query.filter_by(attempt_id=att.id).delete()
-        db.session.delete(att)
-
-    db.session.delete(u)
-    db.session.commit()
-
-    flash(f"Student '{u.username}' deleted successfully.", "success")
-    return redirect(url_for("admin_dashboard"))
-
-
-# DELETE ALL STUDENTS DATA (NEW FEATURE)
-@app.route("/admin/students/delete-all", methods=["POST"])
-@admin_required
-@super_admin_required
-def admin_delete_all_students():
-    students = User.query.filter_by(is_admin=False).all()
-
-    for u in students:
-        for att in Attempt.query.filter_by(user_id=u.id).all():
-            Answer.query.filter_by(attempt_id=att.id).delete()
-            db.session.delete(att)
-
-        db.session.delete(u)
-
-    db.session.commit()
-
-    flash("All student data deleted successfully.", "success")
-    return redirect(url_for("admin_dashboard"))
-@app.route("/admin/students/<int:user_id>/grant-reattempt", methods=["POST"])
-@admin_required
-@super_admin_required
-def admin_grant_reattempt(user_id):
-    user = db.session.get(User, user_id)
-
-    if not user or user.is_admin:
-        flash("Invalid student.", "error")
-        return redirect(url_for("admin_dashboard"))
-
-    # DELETE OLD IN-PROGRESS ATTEMPTS
-    old_attempts = Attempt.query.filter_by(user_id=user.id, status="in_progress").all()
-
-    for att in old_attempts:
-        Answer.query.filter_by(attempt_id=att.id).delete()
-        db.session.delete(att)
-
-    # RESET USER
-    user.exam_completed = False
-    user.exam_access_enabled = True
-    user.allow_reattempt = True
-
-    db.session.commit()
-
-    flash("Reattempt granted successfully.", "success")
-    return redirect(url_for("admin_dashboard"))
-
-@app.route('/admin/add-admin', methods=['GET', 'POST'])
-@admin_required
-@super_admin_required
-def add_admin_page():
-    if request.method == 'POST':
-        return admin_create_admin()
-    
-    return render_template('admin/add_admin.html')
-
-@app.route("/admin/admins/create", methods=["POST"])
-@admin_required
-@super_admin_required
-def admin_create_admin():
-    username = request.form.get("username", "").strip()
-    email = request.form.get("email", "").strip().lower()
-    password = request.form.get("password", "")
-    if not username or not email or len(password) < 6:
-        flash("Username, email, and password (min 6 chars) are required.", "error")
-        return redirect(url_for("add_admin_page"))
-    if User.query.filter(
-        (User.username == username) | (User.email == email)
-    ).first():
-        flash("Username or email already in use.", "error")
-        return redirect(url_for("add_admin_page"))
-    admin_user = User(
-        username=username,
-        email=email,
-        password_hash=generate_password_hash(password),
-        is_admin=True,
-        allow_reattempt=True,
-        exam_access_enabled=True,
-        exam_completed=False,
-        admin_role="admin",
-    )
-    db.session.add(admin_user)
-    db.session.commit()
-    flash("Admin account created for " + username + ".", "success")
-    return redirect(url_for("admin_dashboard"))
-
-
-@app.route("/admin/admins/<int:admin_id>/delete", methods=["POST"])
-@admin_required
-@super_admin_required
-def admin_delete_admin_user(admin_id):
-    actor_id = session["user_id"]
-    target = db.session.get(User, admin_id)
-    if not target or not target.is_admin:
-        flash("Invalid administrator account.", "error")
-        return redirect(url_for("admin_dashboard"))
-    if target.id == actor_id:
-        flash("You cannot delete your own account.", "error")
-        return redirect(url_for("admin_dashboard"))
-    if getattr(target, "admin_role", None) == "super_admin":
-        n_sup = User.query.filter_by(is_admin=True, admin_role="super_admin").count()
-        if n_sup <= 1:
-            flash("Cannot delete the last super administrator.", "error")
-            return redirect(url_for("admin_dashboard"))
-    db.session.delete(target)
-    db.session.commit()
-    flash("Administrator removed.", "success")
-    return redirect(url_for("admin_dashboard"))
-
-
-# NEW ADMIN DETAIL ROUTES
-@app.route("/make-super-admin/<int:user_id>", methods=['POST'])
-def make_super_admin(user_id):
-    # ✅ Ensure user logged in
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    # ✅ Get current user
-    current_user = User.query.get(session["user_id"])
-
-    # ✅ Proper role check
-    if not current_user or current_user.admin_role != "super_admin":
-        return "Unauthorized", 403
-
-    # ✅ Get target user
-    user = User.query.get(user_id)
-    if not user:
-        return "User not found", 404
-
-    # ✅ Update role
-    user.admin_role = "super_admin"
-    db.session.commit()
-
-    flash("User promoted to Super Admin")
-
-    return redirect(url_for("admin_dashboard"))
-
 @app.route('/admin/create-exam', methods=['GET', 'POST'])
 @admin_required
 def create_exam_page():
     if request.method == 'POST':
-        return admin_create_admin()
-    
-    # Ensure user logged in and is admin
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-    
-    current_user = User.query.get(session["user_id"])
-    if not current_user or not current_user.is_admin:
-        return "Unauthorized", 403
-    
-    start_time = datetime.fromisoformat(request.form["start_time"])
-    end_time = datetime.fromisoformat(request.form["end_time"])
+        start_time = datetime.fromisoformat(request.form["start_time"])
+        end_time = datetime.fromisoformat(request.form["end_time"])
 
-    from datetime import datetime, timedelta
-    now = datetime.utcnow() + timedelta(hours=5, minutes=30)
+        now = datetime.utcnow() + timedelta(hours=5, minutes=30)
 
-    # Check if start time is in past
-    if start_time <= now:
-        flash("Cannot schedule exam in past time", "danger")
-        return redirect(url_for("create_exam_page"))
-
-    # Check if end time is in past
-    if end_time <= now:
-        flash("End time must be in future", "danger")
-        return redirect(url_for("create_exam_page"))
-
-    # Check start < end
-    if start_time >= end_time:
-        flash("End time must be after start time", "danger")
-        return redirect(url_for("create_exam_page"))
-
-    existing_exam = ExamSchedule.query.order_by(ExamSchedule.id.desc()).first()
-
-    if existing_exam:
-        if start_time < existing_exam.end_time and end_time > existing_exam.start_time:
-            flash(
-                f"⚠️ Exam already scheduled from "
-                f"{existing_exam.start_time.strftime('%H:%M')} to "
-                f"{existing_exam.end_time.strftime('%H:%M')}",
-                "error"
-            )
+        # Check if start time is in past
+        if start_time <= now:
+            flash("Cannot schedule exam in past time", "danger")
             return redirect(url_for("create_exam_page"))
 
-    # Delete old schedule ONLY
-    old_schedule = ExamSchedule.query.first()
-    if old_schedule:
-        db.session.delete(old_schedule)
-    exam_token = str(uuid.uuid4())
-    
-    new_exam = ExamSchedule(
-        start_time=start_time,
-        end_time=end_time,
-        exam_token=exam_token
-    )
+        # Check if end time is in past
+        if end_time <= now:
+            flash("End time must be in future", "danger")
+            return redirect(url_for("create_exam_page"))
 
-    db.session.add(new_exam)
-    
-    # Get exam name from form
-    subject_name = request.form.get('subject_name', '').strip() or "General Exam"
-    
-    # Save exam history
-    exam_history = ExamHistory(
-        subject_name=subject_name,
-        start_time=start_time,
-        end_time=end_time
-    )
-    
-    db.session.add(exam_history)
-    db.session.commit()
+        # Check start < end
+        if start_time >= end_time:
+            flash("End time must be after start time", "danger")
+            return redirect(url_for("create_exam_page"))
 
-    flash("✅ Exam scheduled successfully!", "success")
+        existing_exam = ExamSchedule.query.order_by(ExamSchedule.id.desc()).first()
 
-    return redirect(url_for("admin_dashboard"))
+        if existing_exam:
+            if start_time < existing_exam.end_time and end_time > existing_exam.start_time:
+                flash(
+                    f"⚠️ Exam already scheduled from "
+                    f"{existing_exam.start_time.strftime('%H:%M')} to "
+                    f"{existing_exam.end_time.strftime('%H:%M')}",
+                    "error"
+                )
+                return redirect(url_for("create_exam_page"))
+
+        # Delete old schedule ONLY
+        old_schedule = ExamSchedule.query.first()
+        if old_schedule:
+            db.session.delete(old_schedule)
+        exam_token = str(uuid.uuid4())
+        
+        new_exam = ExamSchedule(
+            start_time=start_time,
+            end_time=end_time,
+            exam_token=exam_token
+        )
+
+        db.session.add(new_exam)
+        
+        # Get exam name from form
+        subject_name = request.form.get('subject_name', '').strip() or "General Exam"
+        
+        # Save exam history
+        exam_history = ExamHistory(
+            subject_name=subject_name,
+            start_time=start_time,
+            end_time=end_time
+        )
+        
+        db.session.add(exam_history)
+        db.session.commit()
+
+        flash("✅ Exam scheduled successfully!", "success")
+
+        return redirect(url_for("admin_dashboard"))
 
 @app.route('/admin/exam-history')
 @admin_required
@@ -1943,7 +1147,6 @@ def exam_history():
         current_exam.total_students = student_count
     
     # Add student count and status to each exam
-    from datetime import datetime, timedelta
     now = datetime.utcnow() + timedelta(hours=5, minutes=30)
     
     for exam in exams:
@@ -1963,8 +1166,7 @@ def exam_history():
         else:
             exam.status = "NOT STARTED"
     
-    from datetime import datetime, timedelta
-    return render_template('exam_history.html', exams=exams, now=datetime.utcnow() + timedelta(hours=5, minutes=30))
+    return render_template('exam_history.html', exams=exams, now=now)
 
 @app.route('/admin/exam/delete/<int:exam_id>', methods=['POST'])
 @admin_required
